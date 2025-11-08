@@ -55,30 +55,32 @@ public class SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
 		http
-				// 1. Deshabilitar CSRF (Esto se mantiene para APIs REST)
+				// 1. Deshabilitar CSRF
 				.csrf(csrf -> csrf.disable())
 
-				// 2. AÑADIR CONFIGURACIÓN CORS (Esto se mantiene)
+				// 2. AÑADIR CONFIGURACIÓN CORS
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-				// ==========================================================
-				// !!! CLAVE PARA DESACTIVAR LA SEGURIDAD TEMPORALMENTE !!!
-				// Permitir acceso sin autenticación a CUALQUIER petición
-				.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-		// ==========================================================
+				// 3. ASEGURAR RUTAS Y DEFINIR PERMISOS
+				.authorizeHttpRequests(auth -> auth
+						// Rutas públicas (ej: Login, Registro) - Estas NO requieren token
+						.requestMatchers("/api/auth/**").permitAll()
 
-		// 3. COMENTAR (o eliminar) TODA la configuración de JWT y Sesiones:
-		// ***************************************************************
-		/*
-		 * // Desactivación de Sesiones y Filtros JWT .sessionManagement(session ->
-		 * session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-		 * 
-		 * // Comentar la adición del Proveedor de autenticación
-		 * .authenticationProvider(authenticationProvider)
-		 * 
-		 * // Comentar el filtro JWT .addFilterBefore(jwtAuthFilter,
-		 * UsernamePasswordAuthenticationFilter.class);
-		 */
+						// Rutas de Reservas - REQUIEREN TOKEN JWT
+						.requestMatchers("/api/reservas/**").authenticated() // Aseguramos todas las operaciones en
+																				// /api/reservas
+
+						// Aseguramos el resto de peticiones que no sean las de arriba
+						.anyRequest().authenticated())
+
+				// 4. Habilitar la Gestión de Sesiones como STATELESS (Necesario para JWT)
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+				// 5. Agregar el Proveedor de Autenticación
+				.authenticationProvider(authenticationProvider)
+
+				// 6. Agregar el Filtro JWT (Antes del filtro de Usuario/Contraseña de Spring)
+				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

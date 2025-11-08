@@ -16,6 +16,7 @@ class PlayZoneApp extends StatelessWidget {
       title: 'PlayZone',
       theme: Brand.theme(),
       routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

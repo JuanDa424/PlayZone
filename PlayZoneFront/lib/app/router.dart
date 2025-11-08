@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:play_zone1/models/usuario.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'register_page.dart';
@@ -27,10 +28,14 @@ final router = GoRouter(
     
     // 2. Ruta para el ROL 'CLIENTE' (Default)
     // Coincide con el `case 'CLIENTE'` o `default` en LoginPage
-    GoRoute(
-      path: '/main', 
-      builder: (context, state) => const MainPage()
-    ),
+   GoRoute(
+  path: '/main',
+  // state.extra contendrá el objeto que pasaste en el context.go
+  builder: (context, state) {
+    final usuario = state.extra as Usuario; // Castea el objeto a Usuario
+    return MainPage(usuario: usuario); // Pasa el objeto al constructor
+  },
+),
 
     // 3. Ruta para el ROL 'CANCHA_ADMIN'
     // Coincide con el `case 'CANCHA_ADMIN'` en LoginPage

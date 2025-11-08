@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:play_zone1/models/usuario.dart';
 
 // Puedes mover estos estilos y colores a un archivo constants/theme si lo prefieres.
 const kGreenNeon = Color(0xFF00FF85);
@@ -78,7 +79,9 @@ final Map<String, dynamic> mockUser = {
 };
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+const MainPage({super.key, required this.usuario});
+// 1. Agrega el objeto Usuario al constructor
+  final Usuario usuario;
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -89,6 +92,13 @@ class _MainPageState extends State<MainPage> {
   String _searchText = '';
   String _selectedDeporte = 'Todos';
   String _selectedDisponibilidad = 'Todos';
+
+// Nuevas variables para los datos dinámicos
+  late final String _userName;
+  late final String _userEmail;
+  // Agregamos una lista para el historial de reservas real
+  //List<Reserva> _historialReservas = []; 
+  bool _isLoading = true;
 
   // Para reserva
   DateTime? _selectedDate;
@@ -101,6 +111,17 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar los datos del usuario
+    _userName = widget.usuario.nombre;
+    _userEmail = widget.usuario.correo;
+    
+    // Iniciar la carga de datos
+    //_loadReservas();
   }
 
   // Filtros
@@ -264,32 +285,59 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Perfil
-  Widget _buildPerfil() {
+  // Perfil -------------------------------------------------------------------------------------------
+ Widget _buildPerfil() {
+    // Definimos el objeto Usuario. Asume que 'widget.usuario' es accesible 
+    // y contiene los datos del backend.
+    final Usuario user = widget.usuario; 
+
+    // Obtener la primera letra del nombre.
+    // Asegura que no está vacío y la convierte a mayúscula.
+    final String initial = user.nombre.isNotEmpty 
+        ? user.nombre[0].toUpperCase() 
+        : '?'; // Si el nombre está vacío, muestra un signo de interrogación.
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
+          // 1. Círculo de Avatar MODIFICADO para mostrar la inicial
           CircleAvatar(
             radius: 48,
-            backgroundImage: NetworkImage(mockUser['avatar']),
+            backgroundColor: kGreenNeon, // Color de fondo del avatar
+            child: Text(
+              initial, // La inicial del nombre
+              style: const TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: kCarbonBlack, // Color de la letra
+              ),
+            ),
           ),
+          
           const SizedBox(height: 16),
+
+          // 2. Nombre del usuario (Dato real del backend)
           Text(
-            mockUser['nombre'],
+            user.nombre, 
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: kCarbonBlack,
             ),
           ),
+          
+          // 3. Correo del usuario (Dato real del backend)
           Text(
-            mockUser['correo'],
+            user.correo, 
             style: const TextStyle(fontSize: 16, color: kDarkGray),
           ),
+          
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 12),
+          
+          // 4. Sección de Historial de Reservas (Título y Placeholder)
           const Text(
             'Historial de reservas',
             style: TextStyle(
@@ -298,26 +346,20 @@ class _MainPageState extends State<MainPage> {
               color: kCarbonBlack,
             ),
           ),
-          ...mockReservas.map(
-            (reserva) => ListTile(
-              leading: const Icon(Icons.sports_soccer, color: kGreenNeon),
-              title: Text(reserva['cancha']),
-              subtitle: Text(DateFormat('dd/MM/yyyy').format(reserva['fecha'])),
-              trailing: Text(
-                reserva['estado'],
-                style: TextStyle(
-                  color: reserva['estado'] == 'Completada'
-                      ? kGreenNeon
-                      : reserva['estado'] == 'Pendiente'
-                      ? kOrangeAccent
-                      : Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+          
+          // PLACEHOLDER TEMPORAL para la lista de reservas
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20.0),
+            child: Text(
+              'La lista de reservas se cargará en la siguiente fase.',
+              style: TextStyle(fontStyle: FontStyle.italic, color: kDarkGray),
             ),
           ),
+          
           const SizedBox(height: 24),
           const Divider(),
+          
+          // Configuración (Estático)
           ListTile(
             leading: const Icon(Icons.language, color: kDarkGray),
             title: const Text('Idioma'),
@@ -331,8 +373,8 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
     );
-  }
-
+}
+//--------------------------------------------------------------------------------------------------
   // Mostrar detalles de cancha
   void _showCanchaDetalles(Map<String, dynamic> cancha) {
     showModalBottomSheet(

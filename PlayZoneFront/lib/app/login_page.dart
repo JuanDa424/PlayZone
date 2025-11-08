@@ -5,7 +5,7 @@ import '../shared/brand.dart';
 import '../services/auth_service.dart';
 import '../models/usuario.dart';
 import '../models/login_request.dart'; // Importar el DTO de login
-// import 'package:flutter_secure_storage/flutter_secure_storage.dart'; 
+// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,12 +16,12 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
-  // final _storage = const FlutterSecureStorage(); 
+  // final _storage = const FlutterSecureStorage();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
-  bool _isLoading = false; 
+
+  bool _isLoading = false;
 
   // Función auxiliar para mostrar SnackBar
   void _showSnackBar(String message, {bool isError = true}) {
@@ -46,21 +46,19 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() {
-      _isLoading = true; 
+      _isLoading = true;
     });
 
-    final request = LoginRequest(
-      correo: correo,
-      password: password,
-    );
+    final request = LoginRequest(correo: correo, password: password);
 
     try {
       // 1. Llamar al backend y obtener el objeto Usuario (que contiene el rol y el token)
       final Usuario usuario = await _authService.login(request: request);
 
       // 2. ÉXITO: Navegar según el rol
-      String userRole = usuario.role.toUpperCase(); // Asegurar mayúsculas para la comparación
-      
+      String userRole = usuario.role
+          .toUpperCase(); // Asegurar mayúsculas para la comparación
+
       _showSnackBar('Inicio de sesión exitoso. ¡Bienvenido!', isError: false);
 
       switch (userRole) {
@@ -71,24 +69,21 @@ class _LoginPageState extends State<LoginPage> {
           context.go('/main_admin_canchas');
           break;
         case 'CLIENTE':
-          context.go('/main');
-          break;
+          context.go('/main', extra: usuario);
       }
-      
     } catch (e) {
       // 3. ERROR: Manejo de la excepción
       String errorMessage = e.toString().replaceFirst('Exception: ', '');
       String message;
-      
+
       if (errorMessage.contains('Credenciales incorrectas')) {
         message = 'Correo o contraseña incorrectos. Intenta de nuevo.';
       } else {
         // Error genérico (ej. Fallo de conexión)
         message = 'Ocurrió un error: $errorMessage';
       }
-      
+
       _showSnackBar(message, isError: true);
-      
     } finally {
       if (mounted) {
         setState(() {
@@ -97,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
-  
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -128,7 +123,9 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Correo electrónico'),
+                  decoration: const InputDecoration(
+                    labelText: 'Correo electrónico',
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // --- Campo de Contraseña ---
@@ -140,15 +137,15 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 24),
                 // --- Botón de Login (con estado de carga) ---
                 ElevatedButton.icon(
-                  icon: _isLoading 
+                  icon: _isLoading
                       ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Brand.white,
-                              strokeWidth: 3,
-                            ),
-                          ) 
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Brand.white,
+                            strokeWidth: 3,
+                          ),
+                        )
                       : const Icon(Icons.arrow_forward),
                   label: Text(_isLoading ? 'Cargando...' : 'Entrar'),
                   style: ElevatedButton.styleFrom(
@@ -156,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                     foregroundColor: Brand.white,
                     minimumSize: const Size.fromHeight(48),
                   ),
-                  onPressed: _isLoading ? null : _handleLogin, 
+                  onPressed: _isLoading ? null : _handleLogin,
                 ),
                 const SizedBox(height: 12),
                 // ... Resto de botones ...

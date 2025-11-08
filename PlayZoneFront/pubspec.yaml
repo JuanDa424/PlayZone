@@ -15,6 +15,7 @@ dependencies:
   go_router: ^16.2.4
   intl: ^0.20.2
   jwt_decoder: ^2.0.1 # O la versión más reciente
+  google_maps_flutter: ^2.5.0 # Asegúrate de usar la última versión estable
 
 
 dev_dependencies:
