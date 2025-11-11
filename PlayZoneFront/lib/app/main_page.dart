@@ -1,86 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:play_zone1/models/usuario.dart';
-
-// Puedes mover estos estilos y colores a un archivo constants/theme si lo prefieres.
-const kGreenNeon = Color(0xFF00FF85);
-const kCarbonBlack = Color(0xFF121212);
-const kDarkGray = Color(0xFF2F2F2F);
-const kWhite = Color(0xFFFFFFFF);
-const kOrangeAccent = Color(0xFFFF6B00);
-
-final kShadow = [
-  BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, 6)),
-];
-
-// Mock data para canchas y reservas
-final List<Map<String, dynamic>> mockCanchas = [
-  {
-    'id': 1,
-    'nombre': 'Cancha Central',
-    'ubicacion': 'Zona Norte',
-    'deporte': 'Fútbol',
-    'precio': 50000,
-    'calificacion': 4.8,
-    'imagen':
-        'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=400&q=80',
-    'servicios': ['Vestidores', 'Parqueadero', 'Duchas'],
-    'disponible': true,
-  },
-  {
-    'id': 2,
-    'nombre': 'Polideportivo Sur',
-    'ubicacion': 'Zona Sur',
-    'deporte': 'Tenis',
-    'precio': 35000,
-    'calificacion': 4.5,
-    'imagen':
-        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-    'servicios': ['Vestidores', 'Duchas'],
-    'disponible': false,
-  },
-  {
-    'id': 3,
-    'nombre': 'Cancha Olímpica',
-    'ubicacion': 'Centro',
-    'deporte': 'Básquetbol',
-    'precio': 40000,
-    'calificacion': 4.7,
-    'imagen':
-        'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
-    'servicios': ['Parqueadero'],
-    'disponible': true,
-  },
-];
-
-final List<Map<String, dynamic>> mockReservas = [
-  {
-    'fecha': DateTime.now().subtract(const Duration(days: 2)),
-    'cancha': 'Cancha Central',
-    'estado': 'Completada',
-  },
-  {
-    'fecha': DateTime.now().subtract(const Duration(days: 10)),
-    'cancha': 'Polideportivo Sur',
-    'estado': 'Cancelada',
-  },
-  {
-    'fecha': DateTime.now().add(const Duration(days: 3)),
-    'cancha': 'Cancha Olímpica',
-    'estado': 'Pendiente',
-  },
-];
-
-// Mock usuario
-final Map<String, dynamic> mockUser = {
-  'nombre': 'Juan Castro',
-  'correo': 'juandacastro838@gmail.com',
-  'avatar': 'https://randomuser.me/api/portraits/men/32.jpg',
-};
+import 'package:play_zone1/models/usuario.dart'; // Asume que existe
+import '../util/constants.dart';
+import '../widgets/cancha_detalles.dart';
+import '../widgets/reserva_sheet.dart';
+import '../screens/home_screen.dart';
+import '../screens/reservas_screen.dart';
+import '../screens/perfil_screen.dart';
+import '../screens/map_screen.dart';
 
 class MainPage extends StatefulWidget {
-const MainPage({super.key, required this.usuario});
-// 1. Agrega el objeto Usuario al constructor
+  const MainPage({super.key, required this.usuario});
   final Usuario usuario;
 
   @override
@@ -93,14 +22,7 @@ class _MainPageState extends State<MainPage> {
   String _selectedDeporte = 'Todos';
   String _selectedDisponibilidad = 'Todos';
 
-// Nuevas variables para los datos dinámicos
-  late final String _userName;
-  late final String _userEmail;
-  // Agregamos una lista para el historial de reservas real
-  //List<Reserva> _historialReservas = []; 
-  bool _isLoading = true;
-
-  // Para reserva
+  // Para reserva temporal
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   int? _selectedCanchaId;
@@ -116,15 +38,12 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    // Inicializar los datos del usuario
-    _userName = widget.usuario.nombre;
-    _userEmail = widget.usuario.correo;
-    
-    // Iniciar la carga de datos
-    //_loadReservas();
+    // Inicializar los datos del usuario si fuera necesario, aunque ya se usan en PerfilScreen
+    // _userName = widget.usuario.nombre;
+    // _userEmail = widget.usuario.correo;
   }
 
-  // Filtros
+  // Lógica de Filtros
   List<Map<String, dynamic>> get filteredCanchas {
     return mockCanchas.where((cancha) {
       final matchesSearch =
@@ -141,241 +60,43 @@ class _MainPageState extends State<MainPage> {
     }).toList();
   }
 
-  // Pantallas principales
+  // Pantallas principales (usando los nuevos archivos de screens)
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return _buildHome();
+        return HomeScreen(
+          filteredCanchas: filteredCanchas,
+          selectedDeporte: _selectedDeporte,
+          selectedDisponibilidad: _selectedDisponibilidad,
+          onDeporteChanged: (value) =>
+              setState(() => _selectedDeporte = value!),
+          onDisponibilidadChanged: (value) =>
+              setState(() => _selectedDisponibilidad = value!),
+          onCanchaTap: _showCanchaDetalles,
+        );
       case 1:
-        return _buildMapa();
+        return const MapScreen();
       case 2:
-        return _buildReservas();
+        return const ReservasScreen();
       case 3:
-        return _buildPerfil();
+        // Usamos mockUser ya que la clase Usuario no está disponible aquí para el ejemplo.
+        // Lo ideal sería usar los datos de widget.usuario.
+        return PerfilScreen(usuario: widget.usuario);
       default:
-        return _buildHome();
+        return HomeScreen(
+          filteredCanchas: filteredCanchas,
+          selectedDeporte: _selectedDeporte,
+          selectedDisponibilidad: _selectedDisponibilidad,
+          onDeporteChanged: (value) =>
+              setState(() => _selectedDeporte = value!),
+          onDisponibilidadChanged: (value) =>
+              setState(() => _selectedDisponibilidad = value!),
+          onCanchaTap: _showCanchaDetalles,
+        );
     }
   }
 
-  // Home: Exploración y filtros
-  Widget _buildHome() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Filtros
-          Row(
-            children: [
-              DropdownButton<String>(
-                value: _selectedDeporte,
-                items: ['Todos', 'Fútbol', 'Tenis', 'Básquetbol']
-                    .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedDeporte = value!;
-                  });
-                },
-              ),
-              const SizedBox(width: 12),
-              DropdownButton<String>(
-                value: _selectedDisponibilidad,
-                items: ['Todos', 'Disponible', 'No disponible']
-                    .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedDisponibilidad = value!;
-                  });
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Lista de canchas populares
-          Text(
-            'Canchas populares cerca de ti',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: kCarbonBlack,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...filteredCanchas.map(
-            (cancha) => CanchaCard(
-              cancha: cancha,
-              onTap: () => _showCanchaDetalles(cancha),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Mapa (mock)
-  Widget _buildMapa() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(24),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: kDarkGray,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: kShadow,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.map, color: kGreenNeon, size: 64),
-            const SizedBox(height: 16),
-            const Text(
-              'Mapa interactivo (demo)',
-              style: TextStyle(
-                color: kWhite,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Aquí se mostrarán las canchas cercanas en un mapa real.',
-              style: TextStyle(color: kWhite.withOpacity(0.8)),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Reservas
-  Widget _buildReservas() {
-    return ListView.separated(
-      padding: const EdgeInsets.all(24),
-      itemCount: mockReservas.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, i) {
-        final reserva = mockReservas[i];
-        return Card(
-          color: kWhite,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ListTile(
-            leading: Icon(Icons.sports_soccer, color: kGreenNeon),
-            title: Text(reserva['cancha']),
-            subtitle: Text(DateFormat('dd/MM/yyyy').format(reserva['fecha'])),
-            trailing: Text(
-              reserva['estado'],
-              style: TextStyle(
-                color: reserva['estado'] == 'Completada'
-                    ? kGreenNeon
-                    : reserva['estado'] == 'Pendiente'
-                    ? kOrangeAccent
-                    : Colors.redAccent,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Perfil -------------------------------------------------------------------------------------------
- Widget _buildPerfil() {
-    // Definimos el objeto Usuario. Asume que 'widget.usuario' es accesible 
-    // y contiene los datos del backend.
-    final Usuario user = widget.usuario; 
-
-    // Obtener la primera letra del nombre.
-    // Asegura que no está vacío y la convierte a mayúscula.
-    final String initial = user.nombre.isNotEmpty 
-        ? user.nombre[0].toUpperCase() 
-        : '?'; // Si el nombre está vacío, muestra un signo de interrogación.
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          // 1. Círculo de Avatar MODIFICADO para mostrar la inicial
-          CircleAvatar(
-            radius: 48,
-            backgroundColor: kGreenNeon, // Color de fondo del avatar
-            child: Text(
-              initial, // La inicial del nombre
-              style: const TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: kCarbonBlack, // Color de la letra
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-
-          // 2. Nombre del usuario (Dato real del backend)
-          Text(
-            user.nombre, 
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: kCarbonBlack,
-            ),
-          ),
-          
-          // 3. Correo del usuario (Dato real del backend)
-          Text(
-            user.correo, 
-            style: const TextStyle(fontSize: 16, color: kDarkGray),
-          ),
-          
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 12),
-          
-          // 4. Sección de Historial de Reservas (Título y Placeholder)
-          const Text(
-            'Historial de reservas',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: kCarbonBlack,
-            ),
-          ),
-          
-          // PLACEHOLDER TEMPORAL para la lista de reservas
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20.0),
-            child: Text(
-              'La lista de reservas se cargará en la siguiente fase.',
-              style: TextStyle(fontStyle: FontStyle.italic, color: kDarkGray),
-            ),
-          ),
-          
-          const SizedBox(height: 24),
-          const Divider(),
-          
-          // Configuración (Estático)
-          ListTile(
-            leading: const Icon(Icons.language, color: kDarkGray),
-            title: const Text('Idioma'),
-            trailing: const Text('Español'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.notifications, color: kDarkGray),
-            title: const Text('Notificaciones'),
-            trailing: Switch(value: true, onChanged: (_) {}),
-          ),
-        ],
-      ),
-    );
-}
-//--------------------------------------------------------------------------------------------------
-  // Mostrar detalles de cancha
+  // Mostrar detalles de cancha (función de utilidad)
   void _showCanchaDetalles(Map<String, dynamic> cancha) {
     showModalBottomSheet(
       context: context,
@@ -406,7 +127,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Mostrar modal de reserva
+  // Mostrar modal de reserva (función de utilidad)
   void _showReserva(Map<String, dynamic> cancha) {
     showModalBottomSheet(
       context: context,
@@ -433,7 +154,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Mensaje de éxito
+  // Mensaje de éxito (función de utilidad)
   void _showReservaSuccess() {
     showDialog(
       context: context,
@@ -472,6 +193,12 @@ class _MainPageState extends State<MainPage> {
 
   // Header / Barra superior
   PreferredSizeWidget _buildAppBar() {
+    // 1. Obtener la inicial del nombre del usuario real
+    // Asegúrate de que widget.usuario.nombre esté disponible y no sea nulo.
+    final String initial = widget.usuario.nombre.isNotEmpty
+        ? widget.usuario.nombre[0].toUpperCase()
+        : '?';
+
     return AppBar(
       backgroundColor: kGreenNeon,
       elevation: 0,
@@ -505,12 +232,8 @@ class _MainPageState extends State<MainPage> {
           icon: const Icon(Icons.location_on, color: kCarbonBlack),
           tooltip: 'Ubicación actual',
           onPressed: () {
-            // Aquí puedes abrir un mapa o mostrar la ubicación actual
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Función de ubicación no implementada'),
-              ),
-            );
+            // Navega directamente al mapa
+            _onNavTapped(1);
           },
         ),
         IconButton(
@@ -522,13 +245,22 @@ class _MainPageState extends State<MainPage> {
             );
           },
         ),
+        // 2. Avatar con la inicial del usuario
         IconButton(
-          icon: CircleAvatar(
-            radius: 16,
-            backgroundImage: NetworkImage(mockUser['avatar']),
-          ),
           tooltip: 'Perfil',
           onPressed: () => setState(() => _selectedIndex = 3),
+          icon: CircleAvatar(
+            radius: 16,
+            backgroundColor: kCarbonBlack, // Color para el fondo del avatar
+            child: Text(
+              initial, // Usamos la inicial calculada
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: kGreenNeon, // Color de la letra
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -565,380 +297,6 @@ class _MainPageState extends State<MainPage> {
         child: _buildBody(),
       ),
       bottomNavigationBar: _buildBottomNavBar(),
-    );
-  }
-}
-
-// Widget: Card de cancha en la lista principal
-class CanchaCard extends StatelessWidget {
-  final Map<String, dynamic> cancha;
-  final VoidCallback onTap;
-
-  const CanchaCard({super.key, required this.cancha, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: kWhite,
-      elevation: 6,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(20),
-              ),
-              child: Image.network(
-                cancha['imagen'],
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      cancha['nombre'],
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Montserrat',
-                        color: kCarbonBlack,
-                      ),
-                    ),
-                    Text(
-                      cancha['ubicacion'],
-                      style: const TextStyle(fontSize: 14, color: kDarkGray),
-                    ),
-                    Row(
-                      children: [
-                        Icon(Icons.star, color: kOrangeAccent, size: 18),
-                        Text(
-                          cancha['calificacion'].toString(),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '\$${cancha['precio']}/hora',
-                          style: const TextStyle(
-                            color: kGreenNeon,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kGreenNeon,
-                        foregroundColor: kCarbonBlack,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      onPressed: onTap,
-                      child: const Text('Ver detalles'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Widget: Detalles de la cancha
-class CanchaDetalles extends StatelessWidget {
-  final Map<String, dynamic> cancha;
-  final VoidCallback onReservar;
-
-  const CanchaDetalles({
-    super.key,
-    required this.cancha,
-    required this.onReservar,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Galería de imágenes (solo una en mock)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Image.network(
-              cancha['imagen'],
-              height: 180,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            cancha['nombre'],
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: kCarbonBlack,
-              fontFamily: 'Montserrat',
-            ),
-          ),
-          Text(
-            cancha['ubicacion'],
-            style: const TextStyle(fontSize: 16, color: kDarkGray),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.star, color: kOrangeAccent),
-              Text(
-                cancha['calificacion'].toString(),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                '\$${cancha['precio']}/hora',
-                style: const TextStyle(
-                  color: kGreenNeon,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Servicios: ${cancha['servicios'].join(', ')}',
-            style: const TextStyle(color: kDarkGray, fontSize: 14),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Descripción del lugar: Espacio deportivo moderno y seguro, ideal para partidos y entrenamientos.',
-            style: const TextStyle(fontSize: 14),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Horarios disponibles:',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: kCarbonBlack,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Selector de fecha y hora (mock)
-          Row(
-            children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kGreenNeon,
-                  foregroundColor: kCarbonBlack,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.calendar_month),
-                label: const Text('Seleccionar fecha y hora'),
-                onPressed: onReservar,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Center(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kOrangeAccent,
-                foregroundColor: kWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 2,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              onPressed: onReservar,
-              child: const Text('Reservar ahora'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Widget: Sheet de reserva
-class ReservaSheet extends StatelessWidget {
-  final Map<String, dynamic> cancha;
-  final DateTime? selectedDate;
-  final TimeOfDay? selectedTime;
-  final TextEditingController jugadoresController;
-  final ValueChanged<DateTime> onDateChanged;
-  final ValueChanged<TimeOfDay> onTimeChanged;
-  final VoidCallback onConfirm;
-
-  const ReservaSheet({
-    super.key,
-    required this.cancha,
-    required this.selectedDate,
-    required this.selectedTime,
-    required this.jugadoresController,
-    required this.onDateChanged,
-    required this.onTimeChanged,
-    required this.onConfirm,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Reserva en ${cancha['nombre']}',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: kCarbonBlack,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreenNeon,
-                    foregroundColor: kCarbonBlack,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.calendar_month),
-                  label: Text(
-                    selectedDate == null
-                        ? 'Fecha'
-                        : DateFormat('dd/MM/yyyy').format(selectedDate!),
-                  ),
-                  onPressed: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate ?? DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 60)),
-                    );
-                    if (picked != null) onDateChanged(picked);
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreenNeon,
-                    foregroundColor: kCarbonBlack,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.access_time),
-                  label: Text(
-                    selectedTime == null
-                        ? 'Hora'
-                        : selectedTime!.format(context),
-                  ),
-                  onPressed: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: selectedTime ?? TimeOfDay.now(),
-                    );
-                    if (picked != null) onTimeChanged(picked);
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: jugadoresController,
-            decoration: const InputDecoration(
-              labelText: 'Jugadores (opcional)',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: kWhite,
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.sports_soccer, color: kGreenNeon),
-              title: Text(cancha['nombre']),
-              subtitle: Text(cancha['ubicacion']),
-              trailing: Text(
-                '\$${cancha['precio']}/hora',
-                style: const TextStyle(
-                  color: kGreenNeon,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kOrangeAccent,
-              foregroundColor: kWhite,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              textStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            icon: const Icon(Icons.check_circle),
-            label: const Text('Confirmar reserva'),
-            onPressed: onConfirm,
-          ),
-        ],
-      ),
     );
   }
 }

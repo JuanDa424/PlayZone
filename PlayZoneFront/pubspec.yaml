@@ -15,18 +15,25 @@ dependencies:
   go_router: ^16.2.4
   intl: ^0.20.2
   jwt_decoder: ^2.0.1 # O la versión más reciente
-  google_maps_flutter: ^2.5.0 # Asegúrate de usar la última versión estable
+  google_maps_flutter: ^2.5.3 # Asegúrate de usar la última versión estable
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: "^0.13.1" # Verifica la última versión
+
+flutter_launcher_icons:
+  android: "launcher_icon" # Nombre del archivo nativo, no lo cambies
+  image_path: "assets/icon/logo_playzone.png" # <--- RUTA A TU ARCHIVO DE LOGO
+  min_sdk_android: 21 # Por defecto, no lo cambies
 
 flutter:
   uses-material-design: true
   assets:
   - assets/background.jpeg
   - assets/logoletra.png
+  - assets/P3.jpg
 
     
