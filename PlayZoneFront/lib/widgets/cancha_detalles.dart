@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import  '../util/constants.dart';
+import '../models/cancha.dart';
+import '../util/constants.dart';
 
 class CanchaDetalles extends StatelessWidget {
-  final Map<String, dynamic> cancha;
+  final Canchas cancha;
   final VoidCallback onReservar;
 
   const CanchaDetalles({
@@ -17,113 +18,113 @@ class CanchaDetalles extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // Se ajusta al contenido
         children: [
-          // Galería de imágenes (solo una en mock)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Image.network(
-              cancha['imagen'],
-              height: 180,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+          // Indicador visual de disponibilidad superior
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                cancha.disponibilidad ? "🟢 DISPONIBLE" : "🔴 OCUPADA ACTUALMENTE",
+                style: TextStyle(
+                  color: cancha.disponibilidad ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                "ID: #${cancha.id}",
+                style: const TextStyle(color: kDarkGray, fontSize: 12),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          
+          // Nombre de la Cancha
           Text(
-            cancha['nombre'],
+            cancha.nombre.toUpperCase(),
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
               color: kCarbonBlack,
               fontFamily: 'Montserrat',
             ),
           ),
-          Text(
-            cancha['ubicacion'],
-            style: const TextStyle(fontSize: 16, color: kDarkGray),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.star, color: kOrangeAccent),
-              Text(
-                cancha['calificacion'].toString(),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                '\$${cancha['precio']}/hora',
-                style: const TextStyle(
-                  color: kGreenNeon,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Servicios: ${cancha['servicios'].join(', ')}',
-            style: const TextStyle(color: kDarkGray, fontSize: 14),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Descripción del lugar: Espacio deportivo moderno y seguro, ideal para partidos y entrenamientos.',
-            style: TextStyle(fontSize: 14),
-          ),
+          
           const SizedBox(height: 16),
+          
+          // Sección de Ubicación
           const Text(
-            'Horarios disponibles:',
+            "UBICACIÓN GEOGRÁFICA",
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: kCarbonBlack,
-              fontSize: 16,
+              fontSize: 13, 
+              fontWeight: FontWeight.bold, 
+              color: kDarkGray
             ),
           ),
           const SizedBox(height: 8),
-          // Botón para iniciar la reserva
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreenNeon,
-                    foregroundColor: kCarbonBlack,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 9, 10, 10),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color.fromARGB(255, 9, 10, 10)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.map_outlined, color: kOrangeAccent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Punto de encuentro en Bogotá",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Lat: ${cancha.latitud} | Lng: ${cancha.longitud}",
+                        style: const TextStyle(color: kDarkGray, fontSize: 13),
+                      ),
+                    ],
                   ),
-                  icon: const Icon(Icons.calendar_month),
-                  label: const Text('Seleccionar fecha y hora'),
-                  onPressed: onReservar,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+
           const SizedBox(height: 24),
-          Center(
+          
+          // Información de Reserva
+          const Text(
+            "Para conocer precios exactos y horarios específicos, por favor inicia el proceso de reserva.",
+            style: TextStyle(color: kDarkGray, fontSize: 14, fontStyle: FontStyle.italic),
+          ),
+          
+          const SizedBox(height: 32),
+          
+          // Botón de Acción Principal
+          SizedBox(
+            width: double.infinity,
+            height: 55,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: kOrangeAccent,
-                foregroundColor: kWhite,
+                backgroundColor: kGreenNeon,
+                foregroundColor: kCarbonBlack,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                elevation: 2,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                elevation: 0,
               ),
-              onPressed: onReservar,
-              child: const Text('Reservar ahora'),
+              onPressed: cancha.disponibilidad ? onReservar : null, // Deshabilitar si no hay disponibilidad
+              child: Text(
+                cancha.disponibilidad ? 'RESERVAR AHORA' : 'NO DISPONIBLE',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
             ),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );

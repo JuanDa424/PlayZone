@@ -1,42 +1,51 @@
-// FILE: lib/screens/map_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../util/canchas_data.dart';
-
+import '../models/cancha.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  // 1. Definimos el parámetro que recibe la lista de canchas
+  final List<Canchas> canchas; 
 
+  const MapScreen({super.key, required this.canchas});
+  
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  _MapScreenState createState() => _MapScreenState();
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // 1. Inicializa el conjunto de marcadores
   Set<Marker> _markers = {};
 
   @override
   void initState() {
     super.initState();
-    // 2. Llama a la función para cargar los datos
+    // 2. Generamos los marcadores apenas inicia la pantalla
     _loadMarkers(); 
   }
 
+  // 3. Detectamos si la lista de canchas cambia (por filtros) para actualizar el mapa
+  @override
+  void didUpdateWidget(MapScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.canchas != widget.canchas) {
+      _loadMarkers();
+    }
+  }
+
   void _loadMarkers() {
-    // Itera sobre la lista estática y crea un marcador por cada cancha
-    final markersSet = canchasBogota.map((cancha) {
+    final markersSet = widget.canchas.map((cancha) {
       return Marker(
-        markerId: MarkerId(cancha.id),
-        position: cancha.coordenadas,
+        markerId: MarkerId(cancha.id.toString()),
+        position: LatLng(cancha.latitud, cancha.longitud),
         infoWindow: InfoWindow(
           title: cancha.nombre,
-          snippet: cancha.direccion,
+          snippet: cancha.disponibilidad ? "🟢 Disponible" : "🔴 Ocupada",
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          cancha.disponibilidad ? BitmapDescriptor.hueAzure : BitmapDescriptor.hueRed
         ),
       );
     }).toSet();
-    
-    // 3. Actualiza el estado con los nuevos marcadores
+
     setState(() {
       _markers = markersSet;
     });
@@ -44,14 +53,16 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-      // Punto central inicial (un punto en Bogotá)
-      initialCameraPosition: const CameraPosition(
-        target: LatLng(4.65, -74.07), // Centro de Bogotá
-        zoom: 12,
+    return Scaffold(
+      body: GoogleMap(
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(4.65, -74.07), // Centro de Bogotá
+          zoom: 12,
+        ),
+        markers: _markers,
+        mapToolbarEnabled: true,
+        myLocationButtonEnabled: true,
       ),
-      // 4. Pasa el conjunto de marcadores al mapa
-      markers: _markers, 
     );
   }
 }

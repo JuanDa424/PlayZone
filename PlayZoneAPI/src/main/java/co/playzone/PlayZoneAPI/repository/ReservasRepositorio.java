@@ -7,47 +7,36 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import co.playzone.PlayZoneAPI.model.Reservas;
 
+@Repository
 public interface ReservasRepositorio extends JpaRepository<Reservas, Long> {
 
-	// ¿Hay traslape en la misma cancha/fecha?
-	// overlap si (start1 < end2) AND (start2 < end1)
-	@Query("""
-			    SELECT COUNT(r) > 0 FROM Reservas r
-			     WHERE r.cancha.id = :canchaId
-			       AND r.fechaReserva = :fecha
-			       AND r.horaInicio < :horaFin
-			       AND :horaInicio < r.horaFin
-			""")
-	boolean existeTraslape(Long canchaId, LocalDate fecha, LocalTime horaInicio, LocalTime horaFin);
+	// Obtener historial por ID de usuario
+	List<Reservas> findByUsuarioIdOrderByFechaReservaAsc(Long usuarioId);
 
-	boolean existsByCancha_IdAndFechaReservaAndHoraInicioAndHoraFin(Long canchaId, LocalDate fecha, LocalTime hi,
-			LocalTime hf);
-
-	List<Reservas> findByUsuario_IdOrderByFechaReservaDescHoraInicioAsc(Long usuarioId);
-
-	List<Reservas> findByCancha_IdOrderByFechaReservaDescHoraInicioAsc(Long canchaId);
-
-	List<Reservas> findByCancha_IdAndFechaReservaOrderByHoraInicioAsc(Long canchaId, LocalDate fecha);
-
-	/**
-	 * Verifica si ya existe una reserva ACTIVA (no cancelada/finalizada) para una
-	 * cancha y hora específicas. Dado que las reservas son de 1 hora (horaInicio =
-	 * horaFin), solo necesitamos buscar una coincidencia exacta de horaInicio y
-	 * fecha.
-	 */
-	@Query("SELECT r FROM Reservas r " + "WHERE r.cancha.id = :canchaId " + "AND r.fechaReserva = :fechaReserva "
-			+ "AND r.horaInicio = :horaInicio " + "AND r.estado IN ('PENDIENTE', 'CONFIRMADA')") // Solo reservamos si
-																									// el estado es
-																									// activo
-	Optional<Reservas> findActiveReservaByCanchaAndHora(Long canchaId, LocalDate fechaReserva, LocalTime horaInicio);
-
-	/**
-	 * Encuentra todas las reservas realizadas por un usuario, buscando por su
-	 * email. Spring Data JPA automáticamente genera la consulta gracias al nombre
-	 * del método.
-	 */
+	// Obtener historial por Email
 	List<Reservas> findByUsuarioCorreo(String email);
+
+	/**
+	 * Verifica si el horario está ocupado. Si una reserva existe pero está
+	 * 'CANCELADA', el COUNT será 0 y liberará el cupo.
+	 */
+	@Query("""
+			 SELECT COUNT(r) > 0 FROM Reservas r
+			  WHERE r.cancha.id = :canchaId
+			    AND r.fechaReserva = :fecha
+			    AND r.horaInicio = :horaInicio
+			    AND r.estado <> 'CANCELADA'
+			""")
+	boolean existeReservaActiva(@Param("canchaId") Long canchaId, @Param("fecha") LocalDate fecha,
+			@Param("horaInicio") LocalTime horaInicio);
+
+	@Query("SELECT r FROM Reservas r " + "WHERE r.cancha.id = :canchaId " + "AND r.fechaReserva = :fechaReserva "
+			+ "AND r.horaInicio = :horaInicio " + "AND r.estado NOT IN ('CANCELADA', 'FINALIZADA')")
+	Optional<Reservas> findActiveReservaByCanchaAndHora(@Param("canchaId") Long canchaId,
+			@Param("fechaReserva") LocalDate fechaReserva, @Param("horaInicio") LocalTime horaInicio);
 }

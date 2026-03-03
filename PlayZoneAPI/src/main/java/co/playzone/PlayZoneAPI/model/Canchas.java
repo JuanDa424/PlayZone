@@ -2,11 +2,9 @@ package co.playzone.PlayZoneAPI.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
 
 @Entity
 @Table(name = "canchas")
-
 public class Canchas {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,27 +14,23 @@ public class Canchas {
 	@Column(nullable = false, length = 100)
 	private String nombre;
 
-	@NotBlank
-	@Column(nullable = false, length = 200)
-	private String direccion;
+	@Column(nullable = false)
+	private Double latitud;
 
-	@Column(length = 100)
-	private String ciudad;
+	@Column(nullable = false)
+	private Double longitud;
 
 	@Column
 	private Boolean disponibilidad = Boolean.TRUE;
 
 	public Canchas() {
-		// TODO Auto-generated constructor stub
 	}
 
-	public Canchas(Long id, @NotBlank String nombre, @NotBlank String direccion, String ciudad,
-			Boolean disponibilidad) {
-		super();
+	public Canchas(Long id, String nombre, Double latitud, Double longitud, Boolean disponibilidad) {
 		this.id = id;
 		this.nombre = nombre;
-		this.direccion = direccion;
-		this.ciudad = ciudad;
+		this.latitud = latitud;
+		this.longitud = longitud;
 		this.disponibilidad = disponibilidad;
 	}
 
@@ -56,20 +50,20 @@ public class Canchas {
 		this.nombre = nombre;
 	}
 
-	public String getDireccion() {
-		return direccion;
+	public Double getLatitud() {
+		return latitud;
 	}
 
-	public void setDireccion(String direccion) {
-		this.direccion = direccion;
+	public void setLatitud(Double latitud) {
+		this.latitud = latitud;
 	}
 
-	public String getCiudad() {
-		return ciudad;
+	public Double getLongitud() {
+		return longitud;
 	}
 
-	public void setCiudad(String ciudad) {
-		this.ciudad = ciudad;
+	public void setLongitud(Double longitud) {
+		this.longitud = longitud;
 	}
 
 	public Boolean getDisponibilidad() {
@@ -79,5 +73,4 @@ public class Canchas {
 	public void setDisponibilidad(Boolean disponibilidad) {
 		this.disponibilidad = disponibilidad;
 	}
-
 }

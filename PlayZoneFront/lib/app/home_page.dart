@@ -47,37 +47,37 @@ class _HomePageState extends State<HomePage>
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo
+          // Fondo de pantalla optimizado
           Positioned.fill(
             child: Image.asset(
               'assets/background.jpeg',
               fit: BoxFit.cover,
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withOpacity(0.25), // Un poco más oscuro para legibilidad
               colorBlendMode: BlendMode.darken,
             ),
           ),
           Column(
             children: [
-              // Banner superior animado
+              // Banner superior animado (Promociones reales)
               SizedBox(
-                height: 32,
+                height: 35,
                 child: Container(
                   color: Brand.green,
                   child: ListView.builder(
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: 20,
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                    itemCount: 15,
+                    itemBuilder: (context, index) => const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 40),
                       child: Center(
                         child: Text(
-                          '15% OFF en tu primera reserva',
-                          style: const TextStyle(
+                          'RESERVA TU CANCHA EN SEGUNDOS ⚽️',
+                          style: TextStyle(
                             color: Brand.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            letterSpacing: 1.2,
+                            fontSize: 14,
+                            letterSpacing: 1.1,
                           ),
                         ),
                       ),
@@ -85,103 +85,88 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ),
-              // Card central mejorada
+              
               Expanded(
                 child: Center(
-                  child: Card(
-                    color: colors.surface,
-                    elevation: 16,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 0,
-                      vertical: 32,
-                    ),
-                    child: Container(
-                      width: 370, // Menos ancho para mejor estética
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 40,
+                  child: SingleChildScrollView( // Evita errores de overflow en pantallas pequeñas
+                    child: Card(
+                      color: colors.surface.withOpacity(0.95), // Ligeramente traslúcido
+                      elevation: 20,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(32),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Logo con fondo circular y sombra
-                          Container(
-                            decoration: BoxDecoration(
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                        width: 350,
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Logo circular
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Brand.green,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Brand.green.withOpacity(0.3),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: Image.asset(
+                                'assets/logoletra.png',
+                                height: 60,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => 
+                                  const Icon(Icons.sports_soccer, size: 60, color: Colors.white),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              "BIENVENIDO",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 3,
+                                color: Brand.blue,
+                              ),
+                            ),
+                            const SizedBox(height: 30),
+
+                            // Botón Iniciar Sesión
+                            _buildMainButton(
+                              icon: Icons.login_rounded,
+                              label: 'Iniciar sesión',
                               color: Brand.green,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Brand.green.withOpacity(0.25),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
+                              onPressed: () => context.go('/login'),
                             ),
-                            padding: const EdgeInsets.all(18),
-                            child: Image.asset(
-                              'assets/logoletra.png',
-                              height: 70,
-                              fit: BoxFit.contain,
+                            
+                            const SizedBox(height: 16),
+
+                            // Botón Registro
+                            _buildMainButton(
+                              icon: Icons.person_add_alt_1_rounded,
+                              label: 'Crear cuenta',
+                              color: Brand.blue,
+                              onPressed: () => context.go('/registro'),
                             ),
-                          ),
-                          const SizedBox(height: 36),
-                          // Botón principal mejorado
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.login, size: 22),
-                            label: const Text('Iniciar sesión'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Brand.green,
-                              foregroundColor: Brand.white,
-                              minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 4,
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+
+                            const SizedBox(height: 24),
+                            
+                            // Link Recuperación
+                            TextButton(
+                              onPressed: () => context.go('/recuperar'),
+                              style: TextButton.styleFrom(foregroundColor: Brand.orange),
+                              child: const Text(
+                                '¿Olvidaste tu contraseña?',
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            onPressed: () => context.go('/login'),
-                          ),
-                          const SizedBox(height: 18),
-                          // Botón secundario mejorado
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.person_add, size: 22),
-                            label: const Text('Crear cuenta'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Brand.blue,
-                              foregroundColor: Brand.white,
-                              minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 4,
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            onPressed: () => context.go('/registro'),
-                          ),
-                          const SizedBox(height: 18),
-                          // Link recuperar contraseña mejorado
-                          TextButton.icon(
-                            icon: const Icon(Icons.lock_reset),
-                            label: const Text('Recuperar contraseña'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: Brand.orange,
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            onPressed: () => context.go('/recuperar'),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -191,6 +176,28 @@ class _HomePageState extends State<HomePage>
           ),
         ],
       ),
+    );
+  }
+
+  // Helper para no repetir código de botones
+  Widget _buildMainButton({
+    required IconData icon, 
+    required String label, 
+    required Color color, 
+    required VoidCallback onPressed
+  }) {
+    return ElevatedButton.icon(
+      icon: Icon(icon, size: 20),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Brand.white,
+        minimumSize: const Size.fromHeight(55),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      ),
+      onPressed: onPressed,
     );
   }
 }

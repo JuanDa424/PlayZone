@@ -43,11 +43,10 @@ public class TarifasHorariasController {
 		t.setCancha(c);
 		t.setDiaSemana(r.diaSemana());
 		t.setHoraInicio(LocalTime.parse(r.horaInicio()));
-		t.setHoraFin(LocalTime.parse(r.horaFin()));
 		t.setPrecioHora(new BigDecimal(r.precioHora()));
 		t = repo.save(t);
 		var dto = new TarifasHorariasDTO(t.getId(), c.getId(), t.getDiaSemana(), t.getHoraInicio().toString(),
-				t.getHoraFin().toString(), t.getPrecioHora());
+				t.getPrecioHora());
 
 		return ResponseEntity.created(URI.create("/tarifas/" + t.getId())).body(dto);
 	}
@@ -58,12 +57,12 @@ public class TarifasHorariasController {
 		if (dia == null) {
 			return repo.findAll().stream().filter(t -> t.getCancha().getId().equals(canchaId))
 					.map(t -> new TarifasHorariasDTO(t.getId(), canchaId, t.getDiaSemana(),
-							t.getHoraInicio().toString(), t.getHoraFin().toString(), t.getPrecioHora()))
+							t.getHoraInicio().toString(), t.getPrecioHora()))
 					.toList();
 		}
 		return repo.findByCancha_IdAndDiaSemanaOrderByHoraInicioAsc(canchaId, dia).stream()
 				.map(t -> new TarifasHorariasDTO(t.getId(), canchaId, t.getDiaSemana(), t.getHoraInicio().toString(),
-						t.getHoraFin().toString(), t.getPrecioHora()))
+						t.getPrecioHora()))
 				.toList();
 	}
 

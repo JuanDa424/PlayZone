@@ -28,7 +28,7 @@ public class TarifasHorariasServicio {
 	public List<TarifasHorariasDTO> listarPorCanchaYDia(Long canchaId, Short diaSemana) {
 		return repo.findByCancha_IdAndDiaSemanaOrderByHoraInicioAsc(canchaId, diaSemana).stream()
 				.map(t -> new TarifasHorariasDTO(t.getId(), t.getCancha().getId(), t.getDiaSemana(),
-						t.getHoraInicio().toString(), t.getHoraFin().toString(), t.getPrecioHora()))
+						t.getHoraInicio().toString(), t.getPrecioHora()))
 				.collect(Collectors.toList());
 	}
 
@@ -68,13 +68,12 @@ public class TarifasHorariasServicio {
 		t.setCancha(cancha);
 		t.setDiaSemana(r.diaSemana());
 		t.setHoraInicio(hi);
-		t.setHoraFin(hf);
 		t.setPrecioHora(precio);
 
 		t = repo.save(t);
 
 		return new TarifasHorariasDTO(t.getId(), cancha.getId(), t.getDiaSemana(), t.getHoraInicio().toString(),
-				t.getHoraFin().toString(), t.getPrecioHora());
+				t.getPrecioHora());
 	}
 
 	@Transactional

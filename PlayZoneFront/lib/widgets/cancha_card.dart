@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../models/cancha.dart'; // Importamos el modelo real
 import '../util/constants.dart';
 
 class CanchaCard extends StatelessWidget {
-  final Map<String, dynamic> cancha;
+  // 1. Cambiamos Map<String, dynamic> por Cancha
+  final Canchas cancha;
   final VoidCallback onTap;
 
   const CanchaCard({super.key, required this.cancha, required this.onTap});
@@ -19,15 +21,17 @@ class CanchaCard extends StatelessWidget {
         onTap: onTap,
         child: Row(
           children: [
+            // Imagen de la cancha
             ClipRRect(
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(20),
               ),
-              child: Image.network(
-                cancha['imagen'],
+              child: Container(
                 width: 100,
-                height: 100,
-                fit: BoxFit.cover,
+                height: 120, // Un poco más alto para que luzca mejor
+                color: Color.fromARGB(99, 94, 86, 86),
+                child: const Icon(Icons.sports_soccer, size: 40, color: kDarkGray),
+                // Cuando tengas URLs en la BD, volveremos a usar Image.network
               ),
             ),
             Expanded(
@@ -39,8 +43,9 @@ class CanchaCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Nombre real
                     Text(
-                      cancha['nombre'],
+                      cancha.nombre,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -48,49 +53,53 @@ class CanchaCard extends StatelessWidget {
                         color: kCarbonBlack,
                       ),
                     ),
+                    // Ubicación (Coordenadas amigables)
                     Text(
-                      cancha['ubicacion'],
-                      style: const TextStyle(fontSize: 14, color: kDarkGray),
+                      "Lat: ${cancha.latitud.toStringAsFixed(2)}, Lng: ${cancha.longitud.toStringAsFixed(2)}",
+                      style: const TextStyle(fontSize: 13, color: kDarkGray),
                     ),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         const Icon(Icons.star, color: kOrangeAccent, size: 18),
-                        Text(
-                          cancha['calificacion'].toString(),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        const Text(
+                          "4.5", // Estático por ahora
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '\$${cancha['precio']}/hora',
-                          style: const TextStyle(
-                            color: kGreenNeon,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: 12),
+                        // Badge de disponibilidad
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: cancha.disponibilidad ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            cancha.disponibilidad ? "Libre" : "Ocupada",
+                            style: TextStyle(
+                              color: cancha.disponibilidad ? Colors.green : Colors.red,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kGreenNeon,
-                        foregroundColor: kCarbonBlack,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                    const SizedBox(height: 8),
+                    // Precio estático hasta conectar tabla de precios
+                    const Text(
+                      '\$100.000 / hr',
+                      style: TextStyle(
+                        color: kGreenNeon,
+                        fontWeight: FontWeight.bold,
                       ),
-                      onPressed: onTap,
-                      child: const Text('Ver detalles'),
                     ),
                   ],
                 ),
               ),
             ),
+            const Icon(Icons.chevron_right, color: Color.fromARGB(99, 94, 86, 86)),
+            const SizedBox(width: 8),
           ],
         ),
       ),

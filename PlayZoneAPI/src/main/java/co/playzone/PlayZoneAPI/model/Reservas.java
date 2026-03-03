@@ -1,14 +1,15 @@
 package co.playzone.PlayZoneAPI.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "reservas", uniqueConstraints = {
-		@UniqueConstraint(name = "uq_reserva_cancha_fecha_horas", columnNames = { "id_cancha", "fecha_reserva",
-				"hora_inicio", "hora_fin" }) })
+		// Actualizamos el UniqueConstraint para que no incluya hora_fin
+		@UniqueConstraint(name = "uq_reserva_cancha_fecha_hora", columnNames = { "id_cancha", "fecha_reserva",
+				"hora_inicio" }) })
 public class Reservas {
 
 	@Id
@@ -29,8 +30,8 @@ public class Reservas {
 	@Column(name = "hora_inicio", nullable = false)
 	private LocalTime horaInicio;
 
-	@Column(name = "hora_fin", nullable = false)
-	private LocalTime horaFin;
+	@Column(name = "total_pago", nullable = false) // Nueva columna para el precio
+	private BigDecimal totalPago;
 
 	@Column(name = "estado", nullable = false)
 	private String estado = "pendiente";
@@ -38,9 +39,14 @@ public class Reservas {
 	public Reservas() {
 	}
 
-	// getters/setters
+	// --- Getters y Setters ---
+
 	public Long getId() {
 		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public Usuarios getUsuario() {
@@ -75,12 +81,12 @@ public class Reservas {
 		this.horaInicio = horaInicio;
 	}
 
-	public LocalTime getHoraFin() {
-		return horaFin;
+	public BigDecimal getTotalPago() {
+		return totalPago;
 	}
 
-	public void setHoraFin(LocalTime horaFin) {
-		this.horaFin = horaFin;
+	public void setTotalPago(BigDecimal totalPago) {
+		this.totalPago = totalPago;
 	}
 
 	public String getEstado() {

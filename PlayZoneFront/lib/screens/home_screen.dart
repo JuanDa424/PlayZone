@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import '../models/cancha.dart'; // IMPORTANTE: Importa tu modelo Cancha
 import '../widgets/cancha_card.dart';
 import '../util/constants.dart';
 
 class HomeScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> filteredCanchas;
+  // 1. Cambiamos Map por la Clase Cancha
+  final List<Canchas> filteredCanchas; 
   final String selectedDeporte;
   final String selectedDisponibilidad;
   final ValueChanged<String?> onDeporteChanged;
   final ValueChanged<String?> onDisponibilidadChanged;
-  final Function(Map<String, dynamic>) onCanchaTap;
+  
+  // 2. La función de tap ahora también recibe un objeto Cancha
+  final Function(Canchas) onCanchaTap;
 
   const HomeScreen({
     super.key,
@@ -50,23 +54,34 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Lista de canchas populares
+          // Título
           const Text(
             'Canchas populares cerca de ti',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: kCarbonBlack,
+              fontFamily: 'Montserrat',
             ),
           ),
           const SizedBox(height: 12),
+          
           // Lista de Canchas filtradas
-          ...filteredCanchas.map(
-            (cancha) => CanchaCard(
-              cancha: cancha,
-              onTap: () => onCanchaTap(cancha),
+          // Si la lista está vacía, mostramos un mensaje amigable
+          if (filteredCanchas.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text("No hay canchas con estos filtros"),
+              ),
+            )
+          else
+            ...filteredCanchas.map(
+              (cancha) => CanchaCard(
+                cancha: cancha, // Asegúrate de que CanchaCard también acepte el objeto Cancha
+                onTap: () => onCanchaTap(cancha),
+              ),
             ),
-          ),
         ],
       ),
     );

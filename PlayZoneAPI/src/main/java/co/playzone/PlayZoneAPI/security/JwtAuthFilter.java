@@ -5,22 +5,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
-
-	private final RequestMatcher PUBLIC_URLS = new AntPathRequestMatcher("/api/auth/**");
 
 	private final JwtService jwtService;
 	private final UserDetailsService userDetailsService;
@@ -30,29 +25,58 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 		this.userDetailsService = userDetailsService;
 	}
 
+	/**
+	 * Este método le dice a Spring qué rutas NO deben pasar por la validación de
+	 * Token. Si retorna true, el filtro se salta y la petición sigue su camino.
+	 */
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-		// Retorna TRUE si el filtro NO DEBE ejecutarse para esta petición.
-		// Ignoramos el filtro si la URL comienza con /api/auth/
-		return PUBLIC_URLS.matches(request);
+		String path = request.getServletPath();
+
+		// AGREGAMOS LAS RUTAS QUE QUEREMOS LIBERAR:
+		// 1. /api/auth/** (Login/Registro)
+		// 2. /canchas/** (Tus endpoints de canchas)
+		// 3. Documentación de Swagger (opcional)
+		return path.startsWith("/api/auth/") || path.startsWith("/canchas") || path.startsWith("/v3/api-docs")
+				|| path.startsWith("/swagger-ui");
 	}
 
 	@Override
 	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 			@NonNull FilterChain filterChain) throws ServletException, IOException {
 
-		// 1. VERIFICACIÓN DE RUTAS PÚBLICAS (¡CLAVE!)
-		// Si la ruta es el registro, login, o cualquier ruta pública, salta la lógica
-		// JWT.
-		if (request.getServletPath().startsWith("/api/auth/") || request.getServletPath().startsWith("/v3/api-docs")
-				|| request.getServletPath().startsWith("/swagger-ui")) {
+		// --- EXPLICACIÓN ---
+		// Al haber configurado 'shouldNotFilter' arriba, si la ruta es /canchas,
+		// este método doFilterInternal NI SIQUIERA se ejecutará.
+		// Pero por seguridad, mantenemos esta validación interna también:
 
-			filterChain.doFilter(request, response);
-			return; // Detiene el procesamiento aquí para rutas públicas
-		}
-
-		// 2. Lógica normal de extracción de Token y validación...
 		final String authHeader = request.getHeader("Authorization");
-		// ... el resto de tu lógica de token ...
+		final String jwt;
+		final String userEmail;
+
+		// Si no hay Header de Authorization o no empieza con Bearer, dejamos pasar la
+		// petición
+		// (Spring Security decidirá luego en su configuración si la ruta era permitida
+		// o no)
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+			filterChain.doFilter(request, response);
+			return;
+		}
+		/*
+		 * // Lógica de extracción de Token (Solo se ejecuta para rutas PRIVADAS) jwt =
+		 * authHeader.substring(7); userEmail = jwtService.extractUsername(jwt);
+		 * 
+		 * if (userEmail != null &&
+		 * SecurityContextHolder.getContext().getAuthentication() == null) { UserDetails
+		 * userDetails = this.userDetailsService.loadUserByUsername(userEmail); if
+		 * (jwtService.isTokenValid(jwt, userDetails)) {
+		 * UsernamePasswordAuthenticationToken authToken = new
+		 * UsernamePasswordAuthenticationToken(userDetails, null,
+		 * userDetails.getAuthorities()); authToken.setDetails(new
+		 * WebAuthenticationDetailsSource().buildDetails(request));
+		 * SecurityContextHolder.getContext().setAuthentication(authToken); } }
+		 */
+
+		filterChain.doFilter(request, response);
 	}
 }

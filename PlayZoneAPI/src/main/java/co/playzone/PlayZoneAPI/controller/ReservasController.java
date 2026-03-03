@@ -2,6 +2,7 @@ package co.playzone.PlayZoneAPI.controller;
 
 import co.playzone.PlayZoneAPI.dto.ReservaDTO;
 import co.playzone.PlayZoneAPI.dto.ReservaRequestDTO;
+import co.playzone.PlayZoneAPI.dto.ReservaResponse;
 import co.playzone.PlayZoneAPI.model.Reservas;
 import co.playzone.PlayZoneAPI.repository.ReservasRepositorio;
 import co.playzone.PlayZoneAPI.service.ReservaServicio;
@@ -19,12 +20,11 @@ import java.util.List;
 public class ReservasController {
 
 	private final ReservaServicio reservaService;
-	private final ReservasRepositorio reservaRepo;
 
 	public ReservasController(ReservaServicio servicio, ReservasRepositorio repo) {
 		this.reservaService = servicio;
-		this.reservaRepo = repo;
 	}
+
 	/*
 	 * @PostMapping public ResponseEntity<ReservaDTO> reservar(@RequestBody
 	 * ReservaRequestDTO req) { return
@@ -52,21 +52,20 @@ public class ReservasController {
 	 * ResponseEntity.notFound().build(); repo.deleteById(id); return
 	 * ResponseEntity.noContent().build(); }
 	 */
-
-	// Endpoint para LISTAR las reservas del usuario autenticado
-	@GetMapping
-	public ResponseEntity<List<Reservas>> listarReservasUsuario(Principal principal) {
-
-		// 1. Obtener la identidad del usuario a través del token
-		String username = principal.getName();
-
-		// 2. Llamar al servicio
-		List<Reservas> reservas = reservaService.listarReservasPorUsuario(username);
-
-		// 3. Retornar la lista
-		return ResponseEntity.ok(reservas);
-	}
-
+	/*
+	 * // Endpoint para LISTAR las reservas del usuario autenticado
+	 * 
+	 * @GetMapping public ResponseEntity<List<Reservas>>
+	 * listarReservasUsuario(Principal principal) {
+	 * 
+	 * // 1. Obtener la identidad del usuario a través del token String username =
+	 * principal.getName();
+	 * 
+	 * // 2. Llamar al servicio List<Reservas> reservas =
+	 * reservaService.listarReservasPorUsuario(username);
+	 * 
+	 * // 3. Retornar la lista return ResponseEntity.ok(reservas); }
+	 */
 	/**
 	 * Endpoint para CREAR una nueva reserva. Requiere un Token JWT válido en el
 	 * encabezado Authorization. * @param reservaDto Los datos de la reserva
@@ -77,23 +76,30 @@ public class ReservasController {
 	 * @return 201 Created con la Reserva creada, o 400 Bad Request si falla la
 	 *         validación.
 	 */
+
+	@GetMapping("/usuario/{usuarioId}")
+	public ResponseEntity<List<ReservaResponse>> obtenerReservasUsuario(@PathVariable("usuarioId") Long usuarioId // <---
+																													// Agregamos
+																													// ("usuarioId")
+	) {
+		List<ReservaResponse> reservas = reservaService.listarReservasPorUsuario(usuarioId);
+		return ResponseEntity.ok(reservas);
+	}
+
 	@PostMapping
-	public ResponseEntity<?> crearReserva(@RequestBody ReservaRequestDTO reservaDto, Principal principal) {
-
-		// 1. Autorización: Obtenemos el nombre de usuario (email) del token JWT.
-		String username = principal.getName();
-
+	public ResponseEntity<?> crearReserva(@RequestBody ReservaRequestDTO reservaDto) {
 		try {
-			// 2. Ejecutar lógica de negocio (validación, cálculo de precio y persistencia).
-			Reservas nuevaReserva = reservaService.crearReserva(reservaDto, username);
-
-			// 3. Respuesta exitosa.
+			// Pasamos el ID que viene en el cuerpo del JSON
+			Reservas nuevaReserva = reservaService.crearReserva(reservaDto);
 			return new ResponseEntity<>(nuevaReserva, HttpStatus.CREATED);
-
 		} catch (RuntimeException e) {
-			// 4. Manejo de excepciones (e.g., Cancha no encontrada, Horario no disponible,
-			// Tarifa no definida).
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
+	}
+
+	@PutMapping("/{id}/cancelar")
+	public ResponseEntity<String> cancelarReserva(@PathVariable("id") Long id) {
+		reservaService.cancelarReserva(id);
+		return ResponseEntity.ok("Reserva cancelada exitosamente y horario liberado.");
 	}
 }

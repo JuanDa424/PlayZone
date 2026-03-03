@@ -30,10 +30,6 @@ public class TarifasHorarias {
 	private LocalTime horaInicio;
 
 	@NotNull
-	@Column(name = "hora_fin", nullable = false)
-	private LocalTime horaFin;
-
-	@NotNull
 	@Column(name = "precio_hora", nullable = false, precision = 10, scale = 2)
 	private BigDecimal precioHora;
 
@@ -42,13 +38,12 @@ public class TarifasHorarias {
 	}
 
 	public TarifasHorarias(Long id, @NotNull Canchas cancha, @NotNull Short diaSemana, @NotNull LocalTime horaInicio,
-			@NotNull LocalTime horaFin, @NotNull BigDecimal precioHora) {
+			@NotNull BigDecimal precioHora) {
 		super();
 		this.id = id;
 		this.cancha = cancha;
 		this.diaSemana = diaSemana;
 		this.horaInicio = horaInicio;
-		this.horaFin = horaFin;
 		this.precioHora = precioHora;
 	}
 
@@ -82,14 +77,6 @@ public class TarifasHorarias {
 
 	public void setHoraInicio(LocalTime horaInicio) {
 		this.horaInicio = horaInicio;
-	}
-
-	public LocalTime getHoraFin() {
-		return horaFin;
-	}
-
-	public void setHoraFin(LocalTime horaFin) {
-		this.horaFin = horaFin;
 	}
 
 	public BigDecimal getPrecioHora() {
