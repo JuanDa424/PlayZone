@@ -7,6 +7,7 @@ import 'package:play_zone1/util/constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone1/widgets/tarifas_matrix_dialog.dart';
 
 class AdminCanchasScreen extends StatelessWidget {
   final String search;
@@ -207,51 +208,92 @@ class _CanchaCard extends StatelessWidget {
               : Colors.redAccent.withOpacity(0.15),
         ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: cancha.disponibilidad
-                ? kGreenNeon.withOpacity(0.1)
-                : Colors.redAccent.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            Icons.sports_soccer_rounded,
-            color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
-            size: 22,
-          ),
-        ),
-        title: Text(
-          cancha.nombre,
-          style: const TextStyle(
-            color: kWhite,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-        subtitle: Text(
-          'Lat: ${cancha.latitud.toStringAsFixed(5)} • Lng: ${cancha.longitud.toStringAsFixed(5)}',
-          style: const TextStyle(color: kLightGray, fontSize: 12),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: cancha.disponibilidad
-                ? kGreenNeon.withOpacity(0.12)
-                : Colors.redAccent.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            cancha.disponibilidad ? 'Activa' : 'Inactiva',
-            style: TextStyle(
-              color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          children: [
+            // Ícono
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: cancha.disponibilidad
+                    ? kGreenNeon.withOpacity(0.1)
+                    : Colors.redAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.sports_soccer_rounded,
+                color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
+                size: 22,
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+
+            // Nombre y coordenadas
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    cancha.nombre,
+                    style: const TextStyle(
+                        color: kWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Lat: ${cancha.latitud.toStringAsFixed(5)} • Lng: ${cancha.longitud.toStringAsFixed(5)}',
+                    style: const TextStyle(color: kLightGray, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Badge estado
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: cancha.disponibilidad
+                    ? kGreenNeon.withOpacity(0.12)
+                    : Colors.redAccent.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                cancha.disponibilidad ? 'Activa' : 'Inactiva',
+                style: TextStyle(
+                  color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // ✅ Botón tarifas con ancho fijo
+            SizedBox(
+              height: 36,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.grid_view_rounded, size: 15),
+                label: const Text('Tarifas', style: TextStyle(fontSize: 13)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: kGreenNeon,
+                  side: const BorderSide(color: kGreenNeon, width: 1),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => TarifasMatrixDialog(cancha: cancha),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

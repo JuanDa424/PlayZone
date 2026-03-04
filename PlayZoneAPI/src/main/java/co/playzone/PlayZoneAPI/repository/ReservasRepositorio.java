@@ -39,4 +39,13 @@ public interface ReservasRepositorio extends JpaRepository<Reservas, Long> {
 			+ "AND r.horaInicio = :horaInicio " + "AND r.estado NOT IN ('CANCELADA', 'FINALIZADA')")
 	Optional<Reservas> findActiveReservaByCanchaAndHora(@Param("canchaId") Long canchaId,
 			@Param("fechaReserva") LocalDate fechaReserva, @Param("horaInicio") LocalTime horaInicio);
+
+	// Obtener todas las reservas de las canchas de un propietario
+	@Query("""
+			    SELECT r FROM Reservas r
+			    JOIN CanchaAdmin ca ON ca.cancha.id = r.cancha.id
+			    WHERE ca.usuario.id = :propietarioId
+			    ORDER BY r.fechaReserva DESC, r.horaInicio ASC
+			""")
+	List<Reservas> findByPropietarioId(@Param("propietarioId") Long propietarioId);
 }

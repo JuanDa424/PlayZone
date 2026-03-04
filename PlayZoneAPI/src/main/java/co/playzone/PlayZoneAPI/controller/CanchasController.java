@@ -2,11 +2,15 @@ package co.playzone.PlayZoneAPI.controller;
 
 import co.playzone.PlayZoneAPI.dto.CanchasDTO;
 import co.playzone.PlayZoneAPI.dto.CrearCanchaReq;
+import co.playzone.PlayZoneAPI.dto.HoraDisponibleDTO;
 import co.playzone.PlayZoneAPI.model.Canchas;
 import co.playzone.PlayZoneAPI.service.CanchasServicio;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,6 +36,12 @@ public class CanchasController {
 	public ResponseEntity<List<CanchasDTO>> obtenerPorPropietario(@PathVariable Long usuarioId) {
 		List<CanchasDTO> lista = canchaServicio.listarPorPropietario(usuarioId).stream().map(this::toDTO).toList();
 		return ResponseEntity.ok(lista);
+	}
+
+	@GetMapping("/{canchaId}/disponibilidad")
+	public ResponseEntity<List<HoraDisponibleDTO>> getDisponibilidad(@PathVariable Long canchaId,
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+		return ResponseEntity.ok(canchaServicio.getDisponibilidad(canchaId, fecha));
 	}
 
 	@PostMapping

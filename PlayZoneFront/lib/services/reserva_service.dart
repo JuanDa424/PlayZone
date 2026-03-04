@@ -7,17 +7,18 @@ class ReservaApiService {
   // Ajusta esta URL según tu entorno
   static const String baseUrl = "http://localhost:8080/api/reservas";
 
-Future<List<ReservaResponse>> fetchReservasUsuario(int usuarioId) async {
+  Future<List<ReservaResponse>> fetchReservasUsuario(int usuarioId) async {
     final response = await http.get(Uri.parse('$baseUrl/usuario/$usuarioId'));
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
-      return jsonResponse.map((data) => ReservaResponse.fromJson(data)).toList();
+      return jsonResponse
+          .map((data) => ReservaResponse.fromJson(data))
+          .toList();
     } else {
       throw Exception('Error al cargar reservas');
     }
   }
-
 
   Future<void> crearReserva(ReservaRequest reserva) async {
     try {
@@ -50,6 +51,21 @@ Future<List<ReservaResponse>> fetchReservasUsuario(int usuarioId) async {
     } catch (e) {
       print("Error en el servicio de cancelación: $e");
       return false;
+    }
+  }
+
+  // GET /api/reservas/propietario/{propietarioId}
+  Future<List<ReservaResponse>> fetchReservasPorPropietario(
+    int propietarioId,
+  ) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/propietario/$propietarioId'),
+    );
+    if (response.statusCode == 200) {
+      final List json = jsonDecode(response.body);
+      return json.map((e) => ReservaResponse.fromJson(e)).toList();
+    } else {
+      throw Exception('Error al cargar reservas: ${response.statusCode}');
     }
   }
 }

@@ -71,11 +71,10 @@ class _RegisterPageState extends State<RegisterPage> {
       final usuario = await _authService.register(request: request);
 
       // 3. ÉXITO: Mostrar mensaje y navegar
-      _showSnackBar(
-        'Registro exitoso. ¡Bienvenido!',
-        isError: false,
-      );
-      context.go('/main'); // Navegar a la pantalla principal
+      _showSnackBar('Registro exitoso. ¡Bienvenido!', isError: false);
+      // Pasa el usuario al estado de navegación para que el router
+      // no intente castear null cuando construya '/main'.
+      context.go('/main', extra: usuario);
     } catch (e) {
       // 4. ERROR: Mostrar el mensaje de fallo
       final message =

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:play_zone1/models/usuario.dart';
 import 'package:play_zone1/services/reserva_service.dart';
 import '../util/constants.dart';
 import '../models/reserva_response.dart';
 
 class ReservasScreen extends StatefulWidget {
-  const ReservasScreen({super.key});
+  final Usuario usuario;
+  const ReservasScreen({super.key, required this.usuario});
 
   @override
   State<ReservasScreen> createState() => _ReservasScreenState();
@@ -15,17 +17,16 @@ class _ReservasScreenState extends State<ReservasScreen> {
   late Future<List<ReservaResponse>> _futureReservas;
 
   @override
-  void initState() {
-    super.initState();
-    _cargarDatos();
-  }
+void initState() {
+  super.initState();
+  _cargarDatos();
+}
 
-  void _cargarDatos() {
-    setState(() {
-      // Reemplaza el '1' por el ID del usuario logueado actualmente
-      _futureReservas = _apiService.fetchReservasUsuario(1);
-    });
-  }
+void _cargarDatos() {
+  setState(() {
+    _futureReservas = _apiService.fetchReservasUsuario(widget.usuario.id); 
+  });
+}
 
   Future<void> _procesoCancelacion(int id) async {
     bool? confirmar = await showDialog(

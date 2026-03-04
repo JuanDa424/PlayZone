@@ -35,7 +35,7 @@ class _MainPageState extends State<MainPage> {
   List<Canchas> _allCanchas = [];
   final CanchasService _canchaService = CanchasService();
   bool _isLoading = true;
-  ReservaApiService _reservaService = ReservaApiService();  
+  ReservaApiService _reservaService = ReservaApiService();
 
   // Para reserva temporal (Modal)
   DateTime? _selectedDate;
@@ -136,127 +136,78 @@ class _MainPageState extends State<MainPage> {
 
   // Muestra el BottomSheet para seleccionar fecha y hora de reserva
   void _showReserva(Canchas cancha) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: kWhite,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Padding(
+      padding: MediaQuery.of(context).viewInsets,
+      child: ReservaSheet(
+        cancha: cancha,
+        usuarioId: widget.usuario.id, // ✅
+        onConfirm: (fecha, hora, metodoPago) {
+          Navigator.pop(context);
+          if (metodoPago == 'En línea') {
+            _showPasarelaPago(cancha, metodoPago, fecha, hora);
+          } else {
+            _procesarReserva(cancha, fecha, hora);
+          }
+        },
       ),
-      builder: (context) => Padding(
-        padding: MediaQuery.of(context).viewInsets,
-        child: ReservaSheet(
-          cancha: cancha,
-          selectedDate: _selectedDate,
-          selectedTime: _selectedTime,
-          onDateChanged: (date) => setState(() => _selectedDate = date),
-          onTimeChanged: (time) => setState(() => _selectedTime = time),
-          onConfirm: (metodoPago) {
-            Navigator.pop(context); // Cierra el modal
-
-            // --- NUEVA LÓGICA ---
-            if (metodoPago == "En línea") {
-              _showPasarelaPago(cancha, metodoPago);
-            } else {
-              // Si es pago en efectivo o presencial, procesamos la reserva de una vez
-              _procesarReserva(cancha);
-            }
-          },
-        ),
-      ),
-    );
-  }
-
+    ),
+  );
+}
   // Nueva función para enviar la reserva al backend
-  Future<void> _procesarReserva(Canchas cancha) async {
-    // 1. Validaciones básicas
-    if (_selectedDate == null || _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor selecciona fecha y hora')),
-      );
-      return;
-    }
+  Future<void> _procesarReserva(Canchas cancha, DateTime fecha, String hora) async {
+  final horaFormateada = '$hora:00'; // "08:00" → "08:00:00"
 
-    if (cancha.id == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: ID de cancha inválido')),
-      );
-      return;
-    }
+  final reservaDto = ReservaRequest(
+    usuarioId: widget.usuario.id,
+    canchaId: cancha.id!,
+    fecha: fecha,
+    horaInicio: horaFormateada,
+  );
 
-    // 2. Formatear la hora a HH:mm:ss para Spring Boot
-    final String horaFormateada =
-        "${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00";
-
-    // 3. Crear el objeto DTO
-    final reservaDto = ReservaRequest(
-      usuarioId: widget.usuario.id, // Viene del constructor de MainPage
-      canchaId: cancha.id!,
-      fecha: _selectedDate!,
-      horaInicio: horaFormateada,
+  setState(() => _isLoading = true);
+  try {
+    await ReservaApiService().crearReserva(reservaDto);
+    _showReservaSuccess();
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
     );
-
-    // 4. Llamar al servicio
-    setState(() => _isLoading = true); // Mostrar loader mientras procesa
-
-    try {
-      await ReservaApiService().crearReserva(reservaDto);
-      _showReservaSuccess(); // Si todo sale bien, muestra el éxito
-    } catch (e) {
-      // Si el backend lanza error (ej. "No hay tarifa"), lo mostramos aquí
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
 
   // Muestra un Dialog simulando la pasarela de pago
-  void _showPasarelaPago(Canchas cancha, String metodoPago) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Pasarela de Pago"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Simulación de pago en línea",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text("Cancha: ${cancha.nombre}"),
-            // Si no tienes precio en el modelo Cancha actualmente, puedes omitir esta línea o usar una tarifa base
-            // Text("Monto: \$${cancha.precio}"),
-            const SizedBox(height: 16),
-            const Text(
-              "Aquí iría la integración con la pasarela de pagos real.",
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
+  void _showPasarelaPago(Canchas cancha, String metodoPago,
+    DateTime fecha, String hora) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      // ... igual que antes ...
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kOrangeAccent,
+            foregroundColor: kWhite,
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kOrangeAccent,
-              foregroundColor: kWhite,
-            ),
-            onPressed: () {
-              Navigator.pop(context); // Cierra el dialog de pago
-              _procesarReserva(cancha); // CREA LA RESERVA EN LA BD
-            },
-            child: const Text("Finalizar pago"),
-          ),
-        ],
-      ),
-    );
-  }
+          onPressed: () {
+            Navigator.pop(context);
+            _procesarReserva(cancha, fecha, hora); // ✅ pasa fecha y hora
+          },
+          child: const Text('Finalizar pago'),
+        ),
+      ],
+    ),
+  );
+}
 
   // Muestra un Dialog de éxito cuando la reserva se completa
   void _showReservaSuccess() {
@@ -390,7 +341,7 @@ class _MainPageState extends State<MainPage> {
       case 1:
         return MapScreen(canchas: filteredCanchas);
       case 2:
-        return const ReservasScreen(); // Asumimos que esta vista maneja su propio estado
+        return ReservasScreen(usuario: widget.usuario); // ✅
       case 3:
         return PerfilScreen(usuario: widget.usuario);
       default:

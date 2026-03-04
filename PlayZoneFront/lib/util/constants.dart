@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 //ESTE ES PARA CONECTAR CON EL EMULADOR DESDE NAVEGADOR WEB
 const String baseUrl = 'http://localhost:8080/api';
+const String baseUrlTarifas = 'http://localhost:8080/tarifas';
 
 // 1. Colores y Estilos
 const kGreenNeon = Color(0xFF00FF85);

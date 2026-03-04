@@ -86,4 +86,10 @@ public class ReservaServicio {
 		reserva.setEstado("CANCELADA");
 		reservasRepo.save(reserva);
 	}
+
+	public List<ReservaResponse> listarReservasPorPropietario(Long propietarioId) {
+		List<Reservas> reservas = reservasRepo.findByPropietarioId(propietarioId);
+		return reservas.stream().map(r -> new ReservaResponse(r.getId(), r.getCancha().getNombre(), r.getFechaReserva(),
+				r.getHoraInicio(), r.getTotalPago(), r.getEstado())).collect(Collectors.toList());
+	}
 }

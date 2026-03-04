@@ -8,6 +8,8 @@ import 'package:play_zone1/screens/admin_canchas_screen.dart';
 import 'package:play_zone1/screens/admin_reservas_screen.dart';
 import 'package:play_zone1/screens/admin_config_screen.dart';
 import 'package:play_zone1/util/constants.dart';
+import 'package:go_router/go_router.dart';
+import 'package:play_zone1/screens/admin_reservas_screen.dart';
 
 class PropietarioAdminPage extends StatefulWidget {
   final Usuario usuario;
@@ -78,7 +80,11 @@ class _PropietarioAdminPageState extends State<PropietarioAdminPage> {
           onCanchaCreada: _cargarCanchas,
         );
       case 2:
-        return AdminReservasScreen(search: _searchText, canchas: _misCanchas);
+        return AdminReservasScreen(
+          search: _searchText, // ✅ era _search
+          canchas: _misCanchas, // ✅ era _canchas
+          usuario: widget.usuario,
+        );
       case 3:
         return AdminConfigScreen(usuario: widget.usuario);
       default:
@@ -105,12 +111,15 @@ class _PropietarioAdminPageState extends State<PropietarioAdminPage> {
             child: Column(
               children: [
                 const SizedBox(height: 32),
+
                 CircleAvatar(
                   radius: 30,
                   backgroundImage: NetworkImage(avatarUrl),
                   backgroundColor: kDarkGray,
                 ),
+
                 const SizedBox(height: 12),
+
                 Text(
                   widget.usuario.nombre,
                   style: const TextStyle(
@@ -120,6 +129,7 @@ class _PropietarioAdminPageState extends State<PropietarioAdminPage> {
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
+
                 Text(
                   'Admin de Cancha',
                   style: TextStyle(
@@ -127,11 +137,15 @@ class _PropietarioAdminPageState extends State<PropietarioAdminPage> {
                     fontSize: 12,
                   ),
                 ),
+
                 const SizedBox(height: 24),
+
+                // ── Items dinámicos del sidebar ──────────────────
                 ..._sidebarItems.asMap().entries.map((entry) {
                   final i = entry.key;
                   final item = entry.value;
                   final selected = i == _selectedIndex;
+
                   return InkWell(
                     onTap: () => setState(() => _selectedIndex = i),
                     borderRadius: BorderRadius.circular(12),
@@ -179,19 +193,40 @@ class _PropietarioAdminPageState extends State<PropietarioAdminPage> {
                     ),
                   );
                 }),
+
                 const Spacer(),
+
+                // ── Botón Cerrar Sesión (CORREGIDO) ──────────────
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.logout, color: kOrangeAccent, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Cerrar sesión',
-                        style: TextStyle(color: kOrangeAccent, fontSize: 13),
+                  child: InkWell(
+                    onTap: () {
+                      context.go('/');
+                      // Si alguna vez falla:
+                      // GoRouter.of(context).go('/');
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
                       ),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout, color: kOrangeAccent, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Cerrar sesión',
+                            style: TextStyle(
+                              color: kOrangeAccent,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -259,15 +294,17 @@ class _PropietarioAdminPageState extends State<PropietarioAdminPage> {
                     ],
                   ),
                 ),
+
                 const Divider(height: 1, color: kDarkGray),
-                // Vista principal con animación
+
+                // Vista principal
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
                     layoutBuilder: (currentChild, previousChildren) {
                       return Stack(
                         alignment: Alignment.topLeft,
-                        fit: StackFit.expand, // ✅ fuerza tamaño a los hijos
+                        fit: StackFit.expand,
                         children: [
                           ...previousChildren,
                           if (currentChild != null) currentChild,

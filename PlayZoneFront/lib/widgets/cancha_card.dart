@@ -1,9 +1,9 @@
+// lib/widgets/cancha_card.dart
 import 'package:flutter/material.dart';
-import '../models/cancha.dart'; // Importamos el modelo real
+import '../models/cancha.dart';
 import '../util/constants.dart';
 
 class CanchaCard extends StatelessWidget {
-  // 1. Cambiamos Map<String, dynamic> por Cancha
   final Canchas cancha;
   final VoidCallback onTap;
 
@@ -11,95 +11,107 @@ class CanchaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: kWhite,
-      elevation: 6,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: kDarkGray,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: cancha.disponibilidad
+                ? kGreenNeon.withOpacity(0.15)
+                : Colors.redAccent.withOpacity(0.15),
+          ),
+        ),
         child: Row(
           children: [
-            // Imagen de la cancha
-            ClipRRect(
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(20),
+            // Ícono cancha
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: cancha.disponibilidad
+                    ? kGreenNeon.withOpacity(0.08)
+                    : Colors.redAccent.withOpacity(0.08),
+                borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(16)),
               ),
-              child: Container(
-                width: 100,
-                height: 120, // Un poco más alto para que luzca mejor
-                color: Color.fromARGB(99, 94, 86, 86),
-                child: const Icon(Icons.sports_soccer, size: 40, color: kDarkGray),
-                // Cuando tengas URLs en la BD, volveremos a usar Image.network
+              child: Icon(
+                Icons.sports_soccer_rounded,
+                size: 40,
+                color: cancha.disponibilidad
+                    ? kGreenNeon.withOpacity(0.5)
+                    : Colors.redAccent.withOpacity(0.5),
               ),
             ),
+
+            // Info
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                    horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nombre real
                     Text(
                       cancha.nombre,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Montserrat',
-                        color: kCarbonBlack,
+                        color: kWhite,
                       ),
                     ),
-                    // Ubicación (Coordenadas amigables)
-                    Text(
-                      "Lat: ${cancha.latitud.toStringAsFixed(2)}, Lng: ${cancha.longitud.toStringAsFixed(2)}",
-                      style: const TextStyle(fontSize: 13, color: kDarkGray),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: kOrangeAccent, size: 18),
-                        const Text(
-                          "4.5", // Estático por ahora
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 12),
-                        // Badge de disponibilidad
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: cancha.disponibilidad ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 6),
+                    // Badge disponibilidad
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: cancha.disponibilidad
+                            ? kGreenNeon.withOpacity(0.12)
+                            : Colors.redAccent.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            cancha.disponibilidad
+                                ? Icons.check_circle_rounded
+                                : Icons.cancel_rounded,
+                            size: 12,
+                            color: cancha.disponibilidad
+                                ? kGreenNeon
+                                : Colors.redAccent,
                           ),
-                          child: Text(
-                            cancha.disponibilidad ? "Libre" : "Ocupada",
+                          const SizedBox(width: 4),
+                          Text(
+                            cancha.disponibilidad
+                                ? 'Disponible'
+                                : 'No disponible',
                             style: TextStyle(
-                              color: cancha.disponibilidad ? Colors.green : Colors.red,
+                              color: cancha.disponibilidad
+                                  ? kGreenNeon
+                                  : Colors.redAccent,
                               fontSize: 11,
-                              fontWeight: FontWeight.bold
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Precio estático hasta conectar tabla de precios
-                    const Text(
-                      '\$100.000 / hr',
-                      style: TextStyle(
-                        color: kGreenNeon,
-                        fontWeight: FontWeight.bold,
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color.fromARGB(99, 94, 86, 86)),
-            const SizedBox(width: 8),
+
+            // Flecha
+            const Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: Icon(Icons.chevron_right_rounded,
+                  color: kLightGray, size: 22),
+            ),
           ],
         ),
       ),
