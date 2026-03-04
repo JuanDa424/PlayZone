@@ -1,4 +1,3 @@
-ALTER TABLE reservas DROP COLUMN hora_fin;
+ALTER TABLE reservas DROP COLUMN IF EXISTS hora_fin;
 ALTER TABLE reservas ADD COLUMN IF NOT EXISTS total_pago DECIMAL(19, 2) NOT NULL DEFAULT 0.00;
-
 ALTER TABLE tarifas_horarias DROP COLUMN IF EXISTS hora_fin;

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import co.playzone.PlayZoneAPI.model.Canchas;
 
 import org.springframework.data.jpa.repository.Query;
+
 import org.springframework.data.repository.query.Param;
 
 public interface CanchasRepositorio extends JpaRepository<Canchas, Long> {
@@ -18,5 +19,4 @@ public interface CanchasRepositorio extends JpaRepository<Canchas, Long> {
 			    WHERE ca.usuario.id = :usuarioId
 			""")
 	List<Canchas> findByPropietario(@Param("usuarioId") Long usuarioId);
-
 }

@@ -45,6 +45,7 @@ public class TarifasHorariasController {
 		t.setDiaSemana(r.diaSemana());
 		t.setHoraInicio(LocalTime.parse(r.horaInicio()));
 		t.setPrecioHora(new BigDecimal(r.precioHora()));
+
 		// ✅ horaFin eliminado — cada franja es exactamente 1 hora
 		t = repo.save(t);
 
@@ -63,6 +64,7 @@ public class TarifasHorariasController {
 
 		return tarifas.stream().map(t -> new TarifasHorariasDTO(t.getId(), canchaId, t.getDiaSemana(),
 				t.getHoraInicio().toString(), t.getPrecioHora())).toList();
+
 	}
 
 	@DeleteMapping("/{id}")

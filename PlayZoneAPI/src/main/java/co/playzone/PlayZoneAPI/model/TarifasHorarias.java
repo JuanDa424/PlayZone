@@ -9,7 +9,6 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "tarifas_horarias", uniqueConstraints = @UniqueConstraint(name = "uq_tarifa", columnNames = { "id_cancha",
 		"dia_semana", "hora_inicio" }))
-
 @Builder
 public class TarifasHorarias {
 	@Id

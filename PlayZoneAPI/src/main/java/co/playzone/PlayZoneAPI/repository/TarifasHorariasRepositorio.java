@@ -32,5 +32,4 @@ public interface TarifasHorariasRepositorio extends JpaRepository<TarifasHoraria
 			+ "AND t.diaSemana = :diaSemana AND t.horaInicio = :horaInicio")
 	Optional<TarifasHorarias> findTarifaApplicable(@Param("canchaId") Long canchaId,
 			@Param("diaSemana") Short diaSemana, @Param("horaInicio") LocalTime horaInicio);
-
 }
