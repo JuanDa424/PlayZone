@@ -16,6 +16,8 @@ dependencies:
   intl: ^0.20.2
   jwt_decoder: ^2.0.1 # O la versión más reciente
   google_maps_flutter: ^2.5.3 # Asegúrate de usar la última versión estable
+  geolocator: ^13.0.2
+  http: ^1.4.0  # Si no lo tienes ya
 
 
 dev_dependencies:

@@ -1,0 +1,8 @@
+ALTER TABLE usuarios
+ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE usuarios
+ADD COLUMN IF NOT EXISTS verification_code VARCHAR(6);
+
+ALTER TABLE usuarios
+ADD COLUMN IF NOT EXISTS verification_expiry TIMESTAMP;

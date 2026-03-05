@@ -13,19 +13,34 @@ class Usuario {
     required this.jwtToken,
   });
 
-  factory Usuario.fromJson(Map<String, dynamic> json) {
-    // Las claves deben coincidir EXACTAMENTE con el JSON que envías:
+ factory Usuario.fromJson(Map<String, dynamic> json) {
+    // Parseo tolerante: algunos endpoints pueden devolver id null o como String,
+    // o usar nombres de campo distintos (ej. 'rolNombre' o 'token').
+    final dynamic idRaw = json['id'];
+    int idParsed;
+    if (idRaw == null) {
+      idParsed = 0;
+    } else if (idRaw is int) {
+      idParsed = idRaw;
+    } else {
+      idParsed = int.tryParse(idRaw.toString()) ?? 0;
+    }
+
+    final nombreParsed = json['nombre']?.toString() ?? '';
+    final correoParsed = json['correo']?.toString() ?? '';
+
+    // Intentar leer el rol con varios nombres posibles
+    final roleParsed = json['role']?.toString() ?? json['rolNombre']?.toString() ?? '';
+
+    // Intentar leer el token con varios nombres posibles
+    final tokenParsed = json['jwtToken']?.toString() ?? json['token']?.toString() ?? '';
+
     return Usuario(
-      // Aseguramos que el id se lea como entero (Dart lo maneja bien)
-      id: json['id'] as int, 
-      nombre: json['nombre'] as String,
-      correo: json['correo'] as String,
-      
-      // El rol se lee directamente.
-      role: json['role'] as String, 
-      
-      // El token se lee directamente.
-      jwtToken: json['jwtToken'] as String,
+      id: idParsed,
+      nombre: nombreParsed,
+      correo: correoParsed,
+      role: roleParsed,
+      jwtToken: tokenParsed,
     );
   }
 }

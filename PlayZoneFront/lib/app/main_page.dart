@@ -11,6 +11,7 @@ import '../screens/home_screen.dart';
 import '../screens/reservas_screen.dart';
 import '../screens/perfil_screen.dart';
 import '../screens/map_screen.dart';
+import '../widgets/playzone_chat_wrapper.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key, required this.usuario});
@@ -136,78 +137,87 @@ class _MainPageState extends State<MainPage> {
 
   // Muestra el BottomSheet para seleccionar fecha y hora de reserva
   void _showReserva(Canchas cancha) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => Padding(
-      padding: MediaQuery.of(context).viewInsets,
-      child: ReservaSheet(
-        cancha: cancha,
-        usuarioId: widget.usuario.id, // ✅
-        onConfirm: (fecha, hora, metodoPago) {
-          Navigator.pop(context);
-          if (metodoPago == 'En línea') {
-            _showPasarelaPago(cancha, metodoPago, fecha, hora);
-          } else {
-            _procesarReserva(cancha, fecha, hora);
-          }
-        },
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: ReservaSheet(
+          cancha: cancha,
+          usuarioId: widget.usuario.id, // ✅
+          onConfirm: (fecha, hora, metodoPago) {
+            Navigator.pop(context);
+            if (metodoPago == 'En línea') {
+              _showPasarelaPago(cancha, metodoPago, fecha, hora);
+            } else {
+              _procesarReserva(cancha, fecha, hora);
+            }
+          },
+        ),
       ),
-    ),
-  );
-}
-  // Nueva función para enviar la reserva al backend
-  Future<void> _procesarReserva(Canchas cancha, DateTime fecha, String hora) async {
-  final horaFormateada = '$hora:00'; // "08:00" → "08:00:00"
-
-  final reservaDto = ReservaRequest(
-    usuarioId: widget.usuario.id,
-    canchaId: cancha.id!,
-    fecha: fecha,
-    horaInicio: horaFormateada,
-  );
-
-  setState(() => _isLoading = true);
-  try {
-    await ReservaApiService().crearReserva(reservaDto);
-    _showReservaSuccess();
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
     );
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
+
+  // Nueva función para enviar la reserva al backend
+  Future<void> _procesarReserva(
+    Canchas cancha,
+    DateTime fecha,
+    String hora,
+  ) async {
+    final horaFormateada = '$hora:00'; // "08:00" → "08:00:00"
+
+    final reservaDto = ReservaRequest(
+      usuarioId: widget.usuario.id,
+      canchaId: cancha.id!,
+      fecha: fecha,
+      horaInicio: horaFormateada,
+    );
+
+    setState(() => _isLoading = true);
+    try {
+      await ReservaApiService().crearReserva(reservaDto);
+      _showReservaSuccess();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   // Muestra un Dialog simulando la pasarela de pago
-  void _showPasarelaPago(Canchas cancha, String metodoPago,
-    DateTime fecha, String hora) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      // ... igual que antes ...
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kOrangeAccent,
-            foregroundColor: kWhite,
+  void _showPasarelaPago(
+    Canchas cancha,
+    String metodoPago,
+    DateTime fecha,
+    String hora,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        // ... igual que antes ...
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
           ),
-          onPressed: () {
-            Navigator.pop(context);
-            _procesarReserva(cancha, fecha, hora); // ✅ pasa fecha y hora
-          },
-          child: const Text('Finalizar pago'),
-        ),
-      ],
-    ),
-  );
-}
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kOrangeAccent,
+              foregroundColor: kWhite,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _procesarReserva(cancha, fecha, hora); // ✅ pasa fecha y hora
+            },
+            child: const Text('Finalizar pago'),
+          ),
+        ],
+      ),
+    );
+  }
 
   // Muestra un Dialog de éxito cuando la reserva se completa
   void _showReservaSuccess() {
@@ -257,7 +267,7 @@ class _MainPageState extends State<MainPage> {
         : '?';
 
     return AppBar(
-      backgroundColor: kGreenNeon,
+      backgroundColor: kCarbonBlack, // en lugar de kGreenNeon
       elevation: 0,
       title: SizedBox(
         height: 44,
@@ -300,6 +310,31 @@ class _MainPageState extends State<MainPage> {
           },
         ),
         IconButton(
+          icon: const Icon(Icons.chat, color: kCarbonBlack),
+          tooltip: 'Asistente',
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              backgroundColor: kWhite,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              builder: (_) => DraggableScrollableSheet(
+                initialChildSize: 0.75,
+                minChildSize: 0.5,
+                maxChildSize: 0.95,
+                expand: false,
+                builder: (_, scrollController) => const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: PlayZoneChatWrapper(),
+                ),
+              ),
+            );
+          },
+        ),
+        IconButton(
           tooltip: 'Perfil',
           onPressed: () => _onNavTapped(3), // Navega a la pestaña de Perfil
           icon: CircleAvatar(
@@ -330,16 +365,16 @@ class _MainPageState extends State<MainPage> {
       case 0:
         return HomeScreen(
           filteredCanchas: filteredCanchas,
-          selectedDeporte: _selectedDeporte,
           selectedDisponibilidad: _selectedDisponibilidad,
-          onDeporteChanged: (value) =>
-              setState(() => _selectedDeporte = value!),
-          onDisponibilidadChanged: (value) =>
-              setState(() => _selectedDisponibilidad = value!),
+          onDisponibilidadChanged: (v) =>
+              setState(() => _selectedDisponibilidad = v!),
           onCanchaTap: _showCanchaDetalles,
         );
       case 1:
-        return MapScreen(canchas: filteredCanchas);
+        return MapScreen(
+          canchas: filteredCanchas,
+          usuario: widget.usuario, // ✅ nuevo
+        );
       case 2:
         return ReservasScreen(usuario: widget.usuario); // ✅
       case 3:

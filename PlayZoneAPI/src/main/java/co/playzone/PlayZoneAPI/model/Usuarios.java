@@ -37,6 +37,15 @@ public class Usuarios implements UserDetails {
 
 	@Column(name = "fecha_registro", nullable = false)
 	private LocalDateTime fechaRegistro = LocalDateTime.now();
+	// --- NUEVAS COLUMNAS PARA VERIFICACION ---
+	@Column(name = "verification_code", nullable = true, length = 6)
+	private String verificationCode;
+
+	@Column(name = "verification_expiry", nullable = true)
+	private LocalDateTime verificationExpiry;
+
+	@Column(name = "email_verified", nullable = false)
+	private boolean emailVerified = false;
 
 	// ------------------- CONSTRUCTORES MANUALES -------------------
 
@@ -47,7 +56,9 @@ public class Usuarios implements UserDetails {
 
 	// 2. Constructor completo (Si lo usas para crear objetos)
 	public Usuarios(Long id, String nombre, String correo, String telefono, String password, Rol rol,
-			LocalDateTime fechaRegistro) {
+			LocalDateTime fechaRegistro, String verificationCode, LocalDateTime verificationExpiry,
+			boolean emailVerified) {
+		super();
 		this.id = id;
 		this.nombre = nombre;
 		this.correo = correo;
@@ -55,6 +66,9 @@ public class Usuarios implements UserDetails {
 		this.password = password;
 		this.rol = rol;
 		this.fechaRegistro = fechaRegistro;
+		this.verificationCode = verificationCode;
+		this.verificationExpiry = verificationExpiry;
+		this.emailVerified = emailVerified;
 	}
 
 	// 3. Constructor para el registro (Común para crear un nuevo usuario)
@@ -67,7 +81,43 @@ public class Usuarios implements UserDetails {
 		this.fechaRegistro = LocalDateTime.now();
 	}
 
+	public Usuarios(Long id, String nombre, String correo, String telefono, String password, Rol rol,
+			LocalDateTime fechaRegistro) {
+		this.id = id;
+		this.nombre = nombre;
+		this.correo = correo;
+		this.telefono = telefono;
+		this.password = password;
+		this.rol = rol;
+		this.fechaRegistro = fechaRegistro;
+		this.emailVerified = false;
+	}
+
 	// ------------------- MÉTODOS DE USERDETAILS -------------------
+
+	public String getVerificationCode() {
+		return verificationCode;
+	}
+
+	public void setVerificationCode(String verificationCode) {
+		this.verificationCode = verificationCode;
+	}
+
+	public LocalDateTime getVerificationExpiry() {
+		return verificationExpiry;
+	}
+
+	public void setVerificationExpiry(LocalDateTime verificationExpiry) {
+		this.verificationExpiry = verificationExpiry;
+	}
+
+	public boolean isEmailVerified() {
+		return emailVerified;
+	}
+
+	public void setEmailVerified(boolean emailVerified) {
+		this.emailVerified = emailVerified;
+	}
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {

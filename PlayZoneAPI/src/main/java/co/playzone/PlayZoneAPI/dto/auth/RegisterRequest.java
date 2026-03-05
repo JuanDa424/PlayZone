@@ -2,15 +2,12 @@ package co.playzone.PlayZoneAPI.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
-import lombok.Data;
 
 public class RegisterRequest {
 
 	@NotBlank
 	private String nombre;
 
-	@Email
 	@NotBlank
 	private String correo;
 
@@ -22,6 +19,10 @@ public class RegisterRequest {
 
 	@NotBlank(message = "El nombre del rol es obligatorio")
 	private String rolNombre; // Aquí se enviará "CANCHA_ADMIN" o "APP_ADMIN"
+
+	public RegisterRequest() {
+		// TODO Auto-generated constructor stub
+	}
 
 	public String getNombre() {
 		return nombre;

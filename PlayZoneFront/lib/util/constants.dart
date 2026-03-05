@@ -1,14 +1,13 @@
 // constants.dart
 import 'package:flutter/material.dart';
-//const String baseUrl = 'http://10.0.2.2:8080/api';
-// NOTA: Usa 10.0.2.2 para emuladores Android y localhost/IP para iOS.
 
-//ESTE ES PARA CONECTAR CON DISPOSITIVO FISICO
-//const String baseUrl = 'http://172.20.10.7:8080/api';
+// Base URL para el backend
+const String baseUrl = 'http://10.5.19.142:8080/api'; // ya no lleva static
+const String baseUrlTarifas = 'http://10.5.19.142:8080/tarifas';
 
-//ESTE ES PARA CONECTAR CON EL EMULADOR DESDE NAVEGADOR WEB
-const String baseUrl = 'http://localhost:8080/api';
-const String baseUrlTarifas = 'http://localhost:8080/tarifas';
+//const String baseUrl = 'http://localhost:8080/api'; // ya no lleva static
+//const String baseUrlTarifas = 'http://localhost:8080/tarifas';
+
 
 // 1. Colores y Estilos
 const kGreenNeon = Color(0xFF00FF85);

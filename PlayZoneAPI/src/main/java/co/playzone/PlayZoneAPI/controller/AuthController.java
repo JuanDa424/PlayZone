@@ -1,5 +1,17 @@
 package co.playzone.PlayZoneAPI.controller;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import co.playzone.PlayZoneAPI.dto.AuthResponseDTO;
 import co.playzone.PlayZoneAPI.dto.auth.AuthenticationResponse;
 import co.playzone.PlayZoneAPI.dto.auth.LoginRequest;
 import co.playzone.PlayZoneAPI.dto.auth.RegisterRequest;
@@ -7,91 +19,93 @@ import co.playzone.PlayZoneAPI.model.Usuarios;
 import co.playzone.PlayZoneAPI.repository.UsuariosRepositorio;
 import co.playzone.PlayZoneAPI.security.JwtService;
 import co.playzone.PlayZoneAPI.service.AuthenticationService;
-import co.playzone.PlayZoneAPI.dto.AuthResponseDTO;
-
 import jakarta.validation.Valid;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.authentication.AuthenticationManager;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-	private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
-
 	private final AuthenticationService authenticationService;
 	private final AuthenticationManager authenticationManager;
-	private final JwtService jwtService; // O tu servicio de JWT
-	private final UsuariosRepositorio usuariosRepositorio; // O tu repositorio de usuarios
+	private final JwtService jwtService;
+	private final UsuariosRepositorio usuariosRepositorio;
 
-	// --- CONSTRUCTOR CORREGIDO ---
 	public AuthController(AuthenticationService authenticationService, AuthenticationManager authenticationManager,
 			JwtService jwtService, UsuariosRepositorio usuariosRepositorio) {
-		// Asignación de TODOS los campos 'final'
 		this.authenticationService = authenticationService;
 		this.authenticationManager = authenticationManager;
 		this.jwtService = jwtService;
 		this.usuariosRepositorio = usuariosRepositorio;
 	}
 
-	// --- ENDPOINT DE REGISTRO PÚBLICO ---
 	@PostMapping("/register")
 	public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) {
-		// 1. Crear el usuario
-		System.out.println("ENTRA AL METODO CREAR");
-		authenticationService.createUser(request);
+		Usuarios user = authenticationService.createUser(request);
 
-		// 2. Crear el objeto LoginRequest de manera tradicional
-		// Asumiendo que tienes un constructor o setters en LoginRequest
-		LoginRequest loginReq = new LoginRequest(request.getCorreo(), request.getPassword());
+		// Enviar código de verificación al correo
+		authenticationService.sendVerificationCode(user);
 
-		// 3. Autenticar y generar el token JWT
-		String token = authenticationService.login(loginReq);
-
-		// 4. Retornar el token al cliente creando AuthenticationResponse de manera
-		// tradicional
+		// No hacemos login automático si queremos obligar a verificar
 		AuthenticationResponse response = new AuthenticationResponse();
-		response.setToken(token); // Asumiendo que usas un setter
-
+		response.setToken(""); // Token vacío hasta que verifique
 		return ResponseEntity.ok(response);
 	}
 
-	// --- ENDPOINT DE INICIO DE SESIÓN ---
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequest request) {
-		// 1. Autenticar y obtener el objeto Authentication
-		Authentication authentication = authenticationManager
+		Authentication auth = authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(request.getCorreo(), request.getPassword()));
 
-		// 2. Obtener la entidad Usuario (la que implementa UserDetails)
-		Usuarios usuario = (Usuarios) authentication.getPrincipal();
+		Usuarios usuario = (Usuarios) auth.getPrincipal();
 
-		// 3. Generar el token
+		if (!usuario.isEmailVerified()) {
+			throw new RuntimeException("EMAIL_NOT_VERIFIED");
+		}
+
 		String token = jwtService.generateToken(usuario);
 
-		// 4. CONSTRUIR EL DTO DE RESPUESTA
-		AuthResponseDTO responseDTO = new AuthResponseDTO();
-		responseDTO.setId(usuario.getId());
-		responseDTO.setNombre(usuario.getNombre());
-		responseDTO.setCorreo(usuario.getCorreo());
+		AuthResponseDTO dto = new AuthResponseDTO();
+		dto.setId(usuario.getId());
+		dto.setNombre(usuario.getNombre());
+		dto.setCorreo(usuario.getCorreo());
+		dto.setRole(usuario.getRol().getCodigo());
+		dto.setJwtToken(token);
 
-		// El rol viene de getAuthorities (que ya tiene el prefijo ROLE_ que debes
-		// quitar)
-		String role = usuario.getRol().getCodigo(); // Asumo que getRol() te da el objeto
-		responseDTO.setRole(role);
+		return ResponseEntity.ok(dto);
+	}
 
-		responseDTO.setJwtToken(token); // El token completo
+	@PostMapping("/resend-verification")
+	public ResponseEntity<?> resendVerification(@RequestBody Map<String, String> request) {
+		String email = request.get("email");
+		authenticationService.resendVerificationCode(email);
+		return ResponseEntity.ok(Map.of("message", "Verification code sent"));
+	}
 
-		// 5. Devolver el DTO con el código 200
-		return ResponseEntity.ok(responseDTO);
+	@PostMapping("/verify-code")
+	public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> request) {
+		String email = request.get("email");
+		String code = request.get("code");
+
+		Usuarios user = usuariosRepositorio.findByCorreo(email)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		if (user.isEmailVerified()) {
+			return ResponseEntity.badRequest().body(Map.of("message", "Email already verified"));
+		}
+
+		if (!code.equals(user.getVerificationCode())) {
+			return ResponseEntity.badRequest().body(Map.of("message", "Invalid code"));
+		}
+
+		if (user.getVerificationExpiry().isBefore(LocalDateTime.now())) {
+			return ResponseEntity.badRequest().body(Map.of("message", "Code expired"));
+		}
+
+		user.setEmailVerified(true);
+		user.setVerificationCode(null);
+		user.setVerificationExpiry(null);
+		usuariosRepositorio.save(user);
+
+		return ResponseEntity.ok(Map.of("message", "Email verified successfully"));
 	}
 }
