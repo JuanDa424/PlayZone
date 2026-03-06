@@ -2,12 +2,13 @@
 import 'package:flutter/material.dart';
 
 // Base URL para el backend
-const String baseUrl = 'http://10.5.19.142:8080/api'; // ya no lleva static
-const String baseUrlTarifas = 'http://10.5.19.142:8080/tarifas';
+//const String baseUrl = 'http://10.5.19.142:8080/api'; // ya no lleva static
+//const String baseUrlTarifas = 'http://10.5.19.142:8080/tarifas';
 
-//const String baseUrl = 'http://localhost:8080/api'; // ya no lleva static
-//const String baseUrlTarifas = 'http://localhost:8080/tarifas';
+const String baseUrl = 'http://localhost:8080/api'; // ya no lleva static
+const String baseUrlReserva = 'http://localhost:8080/api/reservas'; // ya no lleva static
 
+const String baseUrlTarifas = 'http://localhost:8080/tarifas';
 
 // 1. Colores y Estilos
 const kGreenNeon = Color(0xFF00FF85);

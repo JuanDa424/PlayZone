@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:play_zone1/models/reserva_request.dart';
 import 'package:play_zone1/models/reserva_response.dart';
+import 'package:play_zone1/util/constants.dart';
 
 class ReservaApiService {
   // Ajusta esta URL según tu entorno
-  static const String baseUrl = "http://localhost:8080/api/reservas";
 
   Future<List<ReservaResponse>> fetchReservasUsuario(int usuarioId) async {
-    final response = await http.get(Uri.parse('$baseUrl/usuario/$usuarioId'));
+    final response = await http.get(Uri.parse('$baseUrlReserva/usuario/$usuarioId'));
 
     if (response.statusCode == 200) {
       List jsonResponse = json.decode(response.body);
@@ -23,7 +23,7 @@ class ReservaApiService {
   Future<void> crearReserva(ReservaRequest reserva) async {
     try {
       final response = await http.post(
-        Uri.parse(baseUrl),
+        Uri.parse(baseUrlReserva),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(reserva.toJson()),
       );
@@ -44,7 +44,7 @@ class ReservaApiService {
   Future<bool> cancelarReserva(int reservaId) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/$reservaId/cancelar'),
+        Uri.parse('$baseUrlReserva/$reservaId/cancelar'),
       );
       // Retorna true si el servidor respondió 200 OK
       return response.statusCode == 200;
@@ -59,7 +59,7 @@ class ReservaApiService {
     int propietarioId,
   ) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/propietario/$propietarioId'),
+      Uri.parse('$baseUrlReserva/propietario/$propietarioId'),
     );
     if (response.statusCode == 200) {
       final List json = jsonDecode(response.body);
