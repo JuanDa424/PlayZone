@@ -1,4 +1,7 @@
+// lib/app/main_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:play_zone1/models/cancha.dart';
 import 'package:play_zone1/models/reserva_request.dart';
 import 'package:play_zone1/models/usuario.dart';
@@ -22,43 +25,28 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  // ==========================================
-  // 1. VARIABLES DE ESTADO
-  // ==========================================
-
-  // Navegación y Filtros
+  // ── Navegación ────────────────────────────────────────────────
   int _selectedIndex = 0;
+
+  // ── Filtros ───────────────────────────────────────────────────
   String _searchText = '';
-  String _selectedDeporte = 'Todos';
   String _selectedDisponibilidad = 'Todos';
 
-  // Datos y Servicio
+  // ── Datos ─────────────────────────────────────────────────────
   List<Canchas> _allCanchas = [];
   final CanchasService _canchaService = CanchasService();
   bool _isLoading = true;
-  ReservaApiService _reservaService = ReservaApiService();
 
-  // Para reserva temporal (Modal)
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  // ── Selección temporal ────────────────────────────────────────
   int? _selectedCanchaId;
-  final TextEditingController _jugadoresController = TextEditingController();
 
-  // ==========================================
-  // 2. CICLO DE VIDA (INIT)
-  // ==========================================
   @override
   void initState() {
     super.initState();
-    // Al iniciar, cargamos los datos reales del Backend
     _loadDataFromBackend();
   }
 
-  // ==========================================
-  // 3. LÓGICA DE NEGOCIO Y DATOS
-  // ==========================================
-
-  // Trae los datos de la base de datos a través del servicio
+  // ── Carga datos ───────────────────────────────────────────────
   Future<void> _loadDataFromBackend() async {
     try {
       final canchas = await _canchaService.fetchCanchas();
@@ -68,49 +56,36 @@ class _MainPageState extends State<MainPage> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      print("Error cargando canchas: $e");
     }
   }
 
-  // Getter que aplica los filtros seleccionados a la lista traída del Backend
+  // ── Filtro reactivo ───────────────────────────────────────────
   List<Canchas> get filteredCanchas {
     return _allCanchas.where((cancha) {
-      // Filtro por nombre
-      final matchesSearch =
-          _searchText.isEmpty ||
+      final matchesSearch = _searchText.isEmpty ||
           cancha.nombre.toLowerCase().contains(_searchText.toLowerCase());
-
-      // Filtro por disponibilidad
-      final matchesDisponibilidad =
-          _selectedDisponibilidad == 'Todos' ||
+      final matchesDisponibilidad = _selectedDisponibilidad == 'Todos' ||
           (_selectedDisponibilidad == 'Disponible' && cancha.disponibilidad) ||
-          (_selectedDisponibilidad == 'No disponible' &&
-              !cancha.disponibilidad);
-
+          (_selectedDisponibilidad == 'No disponible' && !cancha.disponibilidad);
       return matchesSearch && matchesDisponibilidad;
     }).toList();
   }
 
-  // ==========================================
-  // 4. LÓGICA DE UI Y NAVEGACIÓN (MODALES)
-  // ==========================================
-
-  // Cambia el índice de la barra de navegación inferior
+  // ── Navegación ────────────────────────────────────────────────
   void _onNavTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == _selectedIndex) return;
+    HapticFeedback.selectionClick();
+    setState(() => _selectedIndex = index);
   }
 
-  // Muestra el BottomSheet con los detalles de una cancha específica
-  // NOTA: Asegúrate de que CanchaDetalles reciba un objeto Cancha y no un Map
+  // ── Modales ───────────────────────────────────────────────────
   void _showCanchaDetalles(Canchas cancha) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: kWhite,
+      backgroundColor: kSurfaceColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) => DraggableScrollableSheet(
         expand: false,
@@ -122,12 +97,9 @@ class _MainPageState extends State<MainPage> {
           child: CanchaDetalles(
             cancha: cancha,
             onReservar: () {
-              Navigator.pop(context); // Cierra el modal de detalles
-              setState(() {
-                _selectedCanchaId =
-                    cancha.id; // Guarda el ID de la cancha seleccionada
-              });
-              _showReserva(cancha); // Abre el modal de reserva
+              Navigator.pop(context);
+              setState(() => _selectedCanchaId = cancha.id);
+              _showReserva(cancha);
             },
           ),
         ),
@@ -135,7 +107,6 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Muestra el BottomSheet para seleccionar fecha y hora de reserva
   void _showReserva(Canchas cancha) {
     showModalBottomSheet(
       context: context,
@@ -145,7 +116,7 @@ class _MainPageState extends State<MainPage> {
         padding: MediaQuery.of(context).viewInsets,
         child: ReservaSheet(
           cancha: cancha,
-          usuarioId: widget.usuario.id, // ✅
+          usuarioId: widget.usuario.id,
           onConfirm: (fecha, hora, metodoPago) {
             Navigator.pop(context);
             if (metodoPago == 'En línea') {
@@ -159,58 +130,50 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Nueva función para enviar la reserva al backend
-  Future<void> _procesarReserva(
-    Canchas cancha,
-    DateTime fecha,
-    String hora,
-  ) async {
-    final horaFormateada = '$hora:00'; // "08:00" → "08:00:00"
-
+  Future<void> _procesarReserva(Canchas cancha, DateTime fecha, String hora) async {
     final reservaDto = ReservaRequest(
       usuarioId: widget.usuario.id,
       canchaId: cancha.id!,
       fecha: fecha,
-      horaInicio: horaFormateada,
+      horaInicio: '$hora:00',
     );
-
     setState(() => _isLoading = true);
     try {
       await ReservaApiService().crearReserva(reservaDto);
       _showReservaSuccess();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          buildSnackBar('Error: $e', isError: true),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // Muestra un Dialog simulando la pasarela de pago
-  void _showPasarelaPago(
-    Canchas cancha,
-    String metodoPago,
-    DateTime fecha,
-    String hora,
-  ) {
+  void _showPasarelaPago(Canchas cancha, String metodoPago, DateTime fecha, String hora) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        // ... igual que antes ...
+        backgroundColor: kSurfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Pasarela de pago',
+            style: TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('Cancelar', style: TextStyle(color: kLightGray)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: kOrangeAccent,
               foregroundColor: kWhite,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () {
               Navigator.pop(context);
-              _procesarReserva(cancha, fecha, hora); // ✅ pasa fecha y hora
+              _procesarReserva(cancha, fecha, hora);
             },
             child: const Text('Finalizar pago'),
           ),
@@ -219,105 +182,103 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Muestra un Dialog de éxito cuando la reserva se completa
   void _showReservaSuccess() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: kWhite,
+        backgroundColor: kSurfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle, color: kGreenNeon, size: 64),
-            const SizedBox(height: 16),
-            const Text(
-              '¡Reserva confirmada!',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: kCarbonBlack,
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: kGreenNeon.withOpacity(0.15),
+                shape: BoxShape.circle,
+                border: Border.all(color: kGreenNeon, width: 2),
               ),
+              child: const Icon(Icons.check_rounded, color: kGreenNeon, size: 38),
             ),
+            const SizedBox(height: 16),
+            const Text('¡Reserva confirmada!',
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: kWhite)),
             const SizedBox(height: 8),
             const Text(
-              'Recibirás una notificación y correo con los detalles.',
+              'Recibirás una notificación con los detalles.',
               textAlign: TextAlign.center,
+              style: TextStyle(color: kLightGray),
             ),
           ],
         ),
         actions: [
-          TextButton(
-            child: const Text('Cerrar'),
-            onPressed: () => Navigator.pop(context),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kGreenNeon,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Perfecto',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ==========================================
-  // 5. CONSTRUCCIÓN DE COMPONENTES DE UI
-  // ==========================================
-
-  // Construye el AppBar con la barra de búsqueda y acciones de usuario
+  // ── AppBar ────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar() {
     final String initial = widget.usuario.nombre.isNotEmpty
         ? widget.usuario.nombre[0].toUpperCase()
         : '?';
 
     return AppBar(
-      backgroundColor: kCarbonBlack, // en lugar de kGreenNeon
+      backgroundColor: Colors.black,
       elevation: 0,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: kBorderColor),
+      ),
       title: SizedBox(
-        height: 44,
+        height: 40,
         child: TextField(
           decoration: InputDecoration(
-            hintText: 'Buscar por nombre...',
-            hintStyle: const TextStyle(
-              color: kDarkGray,
-              fontFamily: 'Montserrat',
-            ),
+            hintText: 'Buscar canchas...',
+            hintStyle: const TextStyle(color: kLightGray, fontSize: 14),
             filled: true,
-            fillColor: kWhite,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 0,
-              horizontal: 16,
-            ),
+            fillColor: kDarkGray,
+            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(32),
+              borderRadius: BorderRadius.circular(20),
               borderSide: BorderSide.none,
             ),
-            prefixIcon: const Icon(Icons.search, color: kDarkGray),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: const BorderSide(color: kGreenNeon, width: 1.5),
+            ),
+            prefixIcon: const Icon(Icons.search_rounded, color: kLightGray, size: 18),
           ),
-          style: const TextStyle(color: kCarbonBlack, fontFamily: 'Montserrat'),
+          style: const TextStyle(color: kWhite, fontSize: 14),
           onChanged: (value) => setState(() => _searchText = value),
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.location_on, color: kCarbonBlack),
-          tooltip: 'Ir al mapa',
-          onPressed: () => _onNavTapped(1), // Navega a la pestaña del Mapa
-        ),
-        IconButton(
-          icon: const Icon(Icons.notifications, color: kCarbonBlack),
-          tooltip: 'Notificaciones',
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No tienes notificaciones nuevas')),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.chat, color: kCarbonBlack),
+          icon: const Icon(Icons.chat_bubble_outline_rounded, color: kLightGray),
           tooltip: 'Asistente',
           onPressed: () {
             showModalBottomSheet(
               context: context,
               isScrollControlled: true,
               useSafeArea: true,
-              backgroundColor: kWhite,
+              backgroundColor: kSurfaceColor,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
@@ -334,18 +295,20 @@ class _MainPageState extends State<MainPage> {
             );
           },
         ),
-        IconButton(
-          tooltip: 'Perfil',
-          onPressed: () => _onNavTapped(3), // Navega a la pestaña de Perfil
-          icon: CircleAvatar(
-            radius: 16,
-            backgroundColor: kCarbonBlack,
-            child: Text(
-              initial,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: kGreenNeon,
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: GestureDetector(
+            onTap: () => _onNavTapped(3),
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: kGreenNeon.withOpacity(0.15),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: kGreenNeon,
+                ),
               ),
             ),
           ),
@@ -354,11 +317,20 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Renderiza el contenido principal dependiendo del tab seleccionado
+  // ── Body ──────────────────────────────────────────────────────
   Widget _buildBody() {
-    // Si los datos están cargando, mostramos el indicador en todas las pantallas
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: kGreenNeon),
+            const SizedBox(height: 16),
+            const Text('Cargando canchas...',
+                style: TextStyle(color: kLightGray, fontSize: 13)),
+          ],
+        ),
+      );
     }
 
     switch (_selectedIndex) {
@@ -367,57 +339,164 @@ class _MainPageState extends State<MainPage> {
           filteredCanchas: filteredCanchas,
           selectedDisponibilidad: _selectedDisponibilidad,
           onDisponibilidadChanged: (v) =>
-              setState(() => _selectedDisponibilidad = v!),
+              setState(() => _selectedDisponibilidad = v ?? 'Todos'),
           onCanchaTap: _showCanchaDetalles,
         );
       case 1:
-        return MapScreen(
-          canchas: filteredCanchas,
-          usuario: widget.usuario, // ✅ nuevo
-        );
+        return MapScreen(canchas: filteredCanchas, usuario: widget.usuario);
       case 2:
-        return ReservasScreen(usuario: widget.usuario); // ✅
+        return ReservasScreen(usuario: widget.usuario);
       case 3:
         return PerfilScreen(usuario: widget.usuario);
       default:
-        return Container();
+        return const SizedBox.shrink();
     }
   }
 
-  // Construye la barra de navegación inferior
-  Widget _buildBottomNavBar() {
-    return BottomNavigationBar(
-      backgroundColor: kWhite,
-      selectedItemColor: kGreenNeon,
-      unselectedItemColor: kDarkGray,
-      showUnselectedLabels: true,
-      currentIndex: _selectedIndex,
-      onTap: _onNavTapped,
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-        BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Mapa'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month),
-          label: 'Reservas',
+  // ── Bottom Nav ────────────────────────────────────────────────
+  Widget _buildBottomNav() {
+    final items = [
+      (Icons.home_rounded, 'Inicio'),
+      (Icons.map_rounded, 'Mapa'),
+      (Icons.calendar_month_rounded, 'Reservas'),
+      (Icons.person_rounded, 'Perfil'),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black,
+        border: Border(top: BorderSide(color: kBorderColor, width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.6),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: items.asMap().entries.map((entry) {
+              final i = entry.key;
+              final (icon, label) = entry.value;
+              final selected = _selectedIndex == i;
+              return _NavButton(
+                icon: icon,
+                label: label,
+                selected: selected,
+                onTap: () => _onNavTapped(i),
+              );
+            }).toList(),
+          ),
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-      ],
+      ),
     );
   }
 
-  // ==========================================
-  // 6. BUILD PRINCIPAL
-  // ==========================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: kCarbonBlack,
       appBar: _buildAppBar(),
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: _buildBody(), // Aquí se inserta el contenido dinámico
+        duration: const Duration(milliseconds: 250),
+        transitionBuilder: (child, animation) =>
+            FadeTransition(opacity: animation, child: child),
+        child: KeyedSubtree(
+          key: ValueKey(_selectedIndex),
+          child: _buildBody(),
+        ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+}
+
+// ── NavButton ─────────────────────────────────────────────────────────────
+class _NavButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavButton({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  State<_NavButton> createState() => _NavButtonState();
+}
+
+class _NavButtonState extends State<_NavButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 150));
+    _scale = Tween<double>(begin: 1.0, end: 0.85)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _ctrl.forward(),
+      onTapUp: (_) { _ctrl.reverse(); widget.onTap(); },
+      onTapCancel: () => _ctrl.reverse(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          decoration: BoxDecoration(
+            color: widget.selected
+                ? kGreenNeon.withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            border: widget.selected
+                ? Border.all(color: kGreenNeon.withOpacity(0.2), width: 1)
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.icon,
+                color: widget.selected ? kGreenNeon : kLightGray,
+                size: widget.selected ? 26 : 23,
+              ),
+              const SizedBox(height: 3),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 220),
+                style: TextStyle(
+                  color: widget.selected ? kGreenNeon : kLightGray,
+                  fontSize: 10,
+                  fontWeight: widget.selected
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+                child: Text(widget.label),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

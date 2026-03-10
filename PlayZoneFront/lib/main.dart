@@ -17,7 +17,7 @@ class PlayZoneApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'PlayZone',
-      theme: Brand.theme(),
+      theme: Brand.theme(),   
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

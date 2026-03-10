@@ -1,5 +1,6 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../models/cancha.dart';
 import '../widgets/cancha_card.dart';
 import '../util/constants.dart';
@@ -16,41 +17,98 @@ class HomeScreen extends StatelessWidget {
     required this.selectedDisponibilidad,
     required this.onDisponibilidadChanged,
     required this.onCanchaTap,
-    // selectedDeporte y onDeporteChanged eliminados — no hay deporte en el modelo
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: kCarbonBlack,
+      decoration: const BoxDecoration(gradient: kBgGradient),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Header ───────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                const Text(
-                  'Canchas disponibles',
-                  style: TextStyle(
-                    color: kWhite,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Canchas',
+                        style: TextStyle(
+                          color: kWhite,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '${filteredCanchas.length} ',
+                              style: const TextStyle(
+                                color: kGreenNeon,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text:
+                                  'cancha${filteredCanchas.length != 1 ? 's' : ''} encontrada${filteredCanchas.length != 1 ? 's' : ''}',
+                              style: const TextStyle(
+                                  color: kLightGray, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  '${filteredCanchas.length} cancha${filteredCanchas.length != 1 ? 's' : ''} encontrada${filteredCanchas.length != 1 ? 's' : ''}',
-                  style:
-                      const TextStyle(color: kLightGray, fontSize: 13),
-                ),
+                // Badge disponibles
+                if (filteredCanchas.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: kGreenNeon.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: kGreenNeon.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: kGreenNeon,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${filteredCanchas.where((c) => c.disponibilidad).length} libres',
+                          style: const TextStyle(
+                            color: kGreenNeon,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
-          ),
-          const SizedBox(height: 14),
+          ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
 
-          // ── Filtro disponibilidad ─────────────────────
+          const SizedBox(height: 16),
+
+          // ── Filtros ───────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: SingleChildScrollView(
@@ -59,28 +117,33 @@ class HomeScreen extends StatelessWidget {
                 children: ['Todos', 'Disponible', 'No disponible']
                     .map((opcion) {
                   final selected = selectedDisponibilidad == opcion;
+                  final color = opcion == 'No disponible'
+                      ? Colors.redAccent
+                      : kGreenNeon;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: GestureDetector(
                       onTap: () => onDisponibilidadChanged(opcion),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: selected
-                              ? kGreenNeon.withOpacity(0.15)
+                              ? color.withOpacity(0.12)
                               : kDarkGray,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: selected
-                                ? kGreenNeon
+                                ? color
                                 : Colors.transparent,
+                            width: 1.2,
                           ),
                         ),
                         child: Text(
                           opcion,
                           style: TextStyle(
-                            color: selected ? kGreenNeon : kLightGray,
+                            color: selected ? color : kLightGray,
                             fontWeight: selected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
@@ -93,36 +156,57 @@ class HomeScreen extends StatelessWidget {
                 }).toList(),
               ),
             ),
-          ),
+          ).animate().fadeIn(delay: 100.ms),
+
           const SizedBox(height: 16),
 
           // ── Lista canchas ─────────────────────────────
           Expanded(
             child: filteredCanchas.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.sports_soccer_rounded,
-                            color: kLightGray.withOpacity(0.3), size: 64),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'No hay canchas con este filtro',
-                          style:
-                              TextStyle(color: kLightGray, fontSize: 15),
-                        ),
-                      ],
-                    ),
-                  )
+                ? _buildEmpty()
                 : ListView.builder(
-                    padding:
-                        const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     itemCount: filteredCanchas.length,
                     itemBuilder: (context, i) => CanchaCard(
                       cancha: filteredCanchas[i],
+                      index: i,
                       onTap: () => onCanchaTap(filteredCanchas[i]),
                     ),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.sports_soccer_rounded,
+            color: kLightGray.withOpacity(0.2),
+            size: 72,
+          )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scaleXY(
+                  begin: 0.93,
+                  end: 1.07,
+                  duration: 2000.ms,
+                  curve: Curves.easeInOut),
+          const SizedBox(height: 16),
+          const Text(
+            'No hay canchas con este filtro',
+            style: TextStyle(
+                color: kLightGray,
+                fontSize: 15,
+                fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Prueba cambiando los filtros',
+            style: TextStyle(color: kLightGray, fontSize: 13),
           ),
         ],
       ),

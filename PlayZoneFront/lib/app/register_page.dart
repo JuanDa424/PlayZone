@@ -66,10 +66,6 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       await _authService.register(request: request);
       _showSnackBar('Te enviamos un código de verificación.', isError: false);
-      try {
-        await _authService.resendVerification(request.correo);
-      } catch (_) {}
-
       if (mounted) {
         Navigator.pushReplacement(
           context,

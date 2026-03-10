@@ -5,7 +5,6 @@ import 'package:play_zone1/models/reserva_response.dart';
 import 'package:play_zone1/util/constants.dart';
 
 class ReservaApiService {
-  // Ajusta esta URL según tu entorno
 
   Future<List<ReservaResponse>> fetchReservasUsuario(int usuarioId) async {
     final response = await http.get(Uri.parse('$baseUrlReserva/usuario/$usuarioId'));

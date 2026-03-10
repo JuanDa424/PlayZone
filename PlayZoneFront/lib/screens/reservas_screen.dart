@@ -1,5 +1,6 @@
 // lib/screens/reservas_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:play_zone1/models/usuario.dart';
 import 'package:play_zone1/services/reserva_service.dart';
@@ -14,82 +15,68 @@ class ReservasScreen extends StatefulWidget {
   State<ReservasScreen> createState() => _ReservasScreenState();
 }
 
-class _ReservasScreenState extends State<ReservasScreen> {
+class _ReservasScreenState extends State<ReservasScreen>
+    with SingleTickerProviderStateMixin {
   final ReservaApiService _apiService = ReservaApiService();
 
   List<ReservaResponse> _reservas = [];
   bool _loading = true;
   String? _error;
   String _filtroEstado = 'TODOS';
+  late AnimationController _refreshCtrl;
 
   final List<String> _estados = [
-    'TODOS',
-    'RESERVADO',
-    'CANCELADA',
-    'FINALIZADA',
+    'TODOS', 'RESERVADO', 'CANCELADA', 'FINALIZADA',
   ];
 
   final currencyFormat = NumberFormat.currency(
-    locale: 'es_CO',
-    symbol: '\$',
-    decimalDigits: 0,
-  );
+      locale: 'es_CO', symbol: '\$', decimalDigits: 0);
 
   @override
   void initState() {
     super.initState();
+    _refreshCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
     _cargarDatos();
   }
 
+  @override
+  void dispose() {
+    _refreshCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _cargarDatos() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    _refreshCtrl.forward(from: 0);
+    setState(() { _loading = true; _error = null; });
     try {
       final reservas =
           await _apiService.fetchReservasUsuario(widget.usuario.id);
-      setState(() {
-        _reservas = reservas;
-        _loading = false;
-      });
+      setState(() { _reservas = reservas; _loading = false; });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+      setState(() { _error = e.toString(); _loading = false; });
     }
   }
 
-  List<ReservaResponse> get _reservasFiltradas {
-    return _reservas.where((r) {
-      return _filtroEstado == 'TODOS' || r.estado == _filtroEstado;
-    }).toList();
-  }
+  List<ReservaResponse> get _reservasFiltradas => _reservas
+      .where((r) => _filtroEstado == 'TODOS' || r.estado == _filtroEstado)
+      .toList();
 
   Color _colorEstado(String estado) {
     switch (estado.toUpperCase()) {
-      case 'RESERVADO':
-        return kGreenNeon;
-      case 'CANCELADA':
-        return Colors.redAccent;
-      case 'FINALIZADA':
-        return kLightGray;
-      default:
-        return kOrangeAccent;
+      case 'RESERVADO': return kGreenNeon;
+      case 'CANCELADA': return Colors.redAccent;
+      case 'FINALIZADA': return kLightGray;
+      default: return kOrangeAccent;
     }
   }
 
   IconData _iconEstado(String estado) {
     switch (estado.toUpperCase()) {
-      case 'RESERVADO':
-        return Icons.check_circle_rounded;
-      case 'CANCELADA':
-        return Icons.cancel_rounded;
-      case 'FINALIZADA':
-        return Icons.task_alt_rounded;
-      default:
-        return Icons.hourglass_empty_rounded;
+      case 'RESERVADO': return Icons.check_circle_rounded;
+      case 'CANCELADA': return Icons.cancel_rounded;
+      case 'FINALIZADA': return Icons.task_alt_rounded;
+      default: return Icons.hourglass_empty_rounded;
     }
   }
 
@@ -97,11 +84,12 @@ class _ReservasScreenState extends State<ReservasScreen> {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: kCarbonBlack,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: kSurfaceColor,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
         title: const Text('¿Cancelar reserva?',
-            style: TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: kWhite, fontWeight: FontWeight.bold)),
         content: const Text(
           'La reserva aparecerá como cancelada y otros podrán tomar el turno.',
           style: TextStyle(color: kLightGray),
@@ -109,8 +97,8 @@ class _ReservasScreenState extends State<ReservasScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child:
-                const Text('Volver', style: TextStyle(color: kLightGray)),
+            child: const Text('Volver',
+                style: TextStyle(color: kLightGray)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -129,22 +117,13 @@ class _ReservasScreenState extends State<ReservasScreen> {
     if (confirmar == true) {
       final exito = await _apiService.cancelarReserva(id);
       if (!mounted) return;
-      if (exito) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Reserva cancelada y cupo liberado'),
-            backgroundColor: kGreenNeon,
-          ),
-        );
-        _cargarDatos();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error al cancelar'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        buildSnackBar(
+          exito ? 'Reserva cancelada y cupo liberado' : 'Error al cancelar',
+          isError: !exito,
+        ),
+      );
+      if (exito) _cargarDatos();
     }
   }
 
@@ -152,152 +131,156 @@ class _ReservasScreenState extends State<ReservasScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCarbonBlack,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ───────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Mis Reservas',
-                        style: TextStyle(
-                          color: kWhite,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '${_reservasFiltradas.length} reserva${_reservasFiltradas.length != 1 ? 's' : ''}',
-                        style: const TextStyle(
-                            color: kLightGray, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 38,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: const Text('Actualizar'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: kGreenNeon,
-                        side: const BorderSide(color: kGreenNeon),
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: _cargarDatos,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Filtros ───────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
+      body: Container(
+        decoration: const BoxDecoration(gradient: kBgGradient),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ───────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Row(
-                  children: _estados.map((estado) {
-                    final selected = _filtroEstado == estado;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () =>
-                            setState(() => _filtroEstado = estado),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? kGreenNeon.withOpacity(0.15)
-                                : kDarkGray,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color:
-                                  selected ? kGreenNeon : Colors.transparent,
-                            ),
-                          ),
-                          child: Text(
-                            estado == 'TODOS'
-                                ? 'Todos'
-                                : estado[0] +
-                                    estado.substring(1).toLowerCase(),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Mis Reservas',
                             style: TextStyle(
-                              color:
-                                  selected ? kGreenNeon : kLightGray,
-                              fontWeight: selected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 13,
-                            ),
-                          ),
+                              color: kWhite,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            )),
+                        Text(
+                          '${_reservasFiltradas.length} reserva${_reservasFiltradas.length != 1 ? 's' : ''}',
+                          style: const TextStyle(
+                              color: kLightGray, fontSize: 13),
                         ),
+                      ],
+                    ),
+                    RotationTransition(
+                      turns: _refreshCtrl,
+                      child: IconButton(
+                        icon: const Icon(Icons.refresh_rounded,
+                            color: kGreenNeon),
+                        onPressed: _cargarDatos,
+                        tooltip: 'Actualizar',
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 12),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
 
-            // ── KPIs ──────────────────────────────────────
-            if (!_loading && _reservas.isNotEmpty)
+              const SizedBox(height: 16),
+
+              // ── Filtros ──────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: [
-                      _KpiChip(
-                          label: 'Total',
-                          value: _reservas.length.toString(),
-                          color: kWhite),
-                      const SizedBox(width: 10),
-                      _KpiChip(
-                        label: 'Activas',
-                        value: _reservas
-                            .where((r) => r.estado == 'RESERVADO')
-                            .length
-                            .toString(),
-                        color: kGreenNeon,
-                      ),
-                      const SizedBox(width: 10),
-                      _KpiChip(
-                        label: 'Canceladas',
-                        value: _reservas
-                            .where((r) => r.estado == 'CANCELADA')
-                            .length
-                            .toString(),
-                        color: Colors.redAccent,
-                      ),
-                      const SizedBox(width: 10),
-                      _KpiChip(
-                        label: 'Gastado',
-                        value: currencyFormat.format(
-                          _reservas
-                              .where((r) => r.estado != 'CANCELADA')
-                              .fold(0.0, (s, r) => s + r.totalPago),
+                    children: _estados.asMap().entries.map((entry) {
+                      final estado = entry.value;
+                      final selected = _filtroEstado == estado;
+                      final color = estado == 'TODOS'
+                          ? kGreenNeon
+                          : _colorEstado(estado);
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () =>
+                              setState(() => _filtroEstado = estado),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? color.withOpacity(0.15)
+                                  : kDarkGray,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: selected
+                                    ? color
+                                    : Colors.transparent,
+                                width: 1.2,
+                              ),
+                            ),
+                            child: Text(
+                              estado == 'TODOS'
+                                  ? 'Todos'
+                                  : estado[0] +
+                                      estado.substring(1).toLowerCase(),
+                              style: TextStyle(
+                                color: selected ? color : kLightGray,
+                                fontWeight: selected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
                         ),
-                        color: kOrangeAccent,
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
                 ),
-              ),
-            const SizedBox(height: 12),
+              ).animate().fadeIn(delay: 100.ms),
 
-            // ── Lista ─────────────────────────────────────
-            Expanded(child: _buildBody()),
-          ],
+              const SizedBox(height: 12),
+
+              // ── KPIs ─────────────────────────────────
+              if (!_loading && _reservas.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _KpiChip(
+                            label: 'Total',
+                            value: _reservas.length.toString(),
+                            color: kWhite),
+                        const SizedBox(width: 10),
+                        _KpiChip(
+                          label: 'Activas',
+                          value: _reservas
+                              .where((r) => r.estado == 'RESERVADO')
+                              .length
+                              .toString(),
+                          color: kGreenNeon,
+                        ),
+                        const SizedBox(width: 10),
+                        _KpiChip(
+                          label: 'Canceladas',
+                          value: _reservas
+                              .where((r) => r.estado == 'CANCELADA')
+                              .length
+                              .toString(),
+                          color: Colors.redAccent,
+                        ),
+                        const SizedBox(width: 10),
+                        _KpiChip(
+                          label: 'Gastado',
+                          value: currencyFormat.format(
+                            _reservas
+                                .where((r) => r.estado != 'CANCELADA')
+                                .fold(0.0, (s, r) => s + r.totalPago),
+                          ),
+                          color: kOrangeAccent,
+                        ),
+                      ],
+                    ),
+                  ),
+                ).animate().fadeIn(delay: 200.ms),
+
+              const SizedBox(height: 12),
+
+              // ── Lista ─────────────────────────────────
+              Expanded(child: _buildBody()),
+            ],
+          ),
         ),
       ),
     );
@@ -305,8 +288,17 @@ class _ReservasScreenState extends State<ReservasScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(
-          child: CircularProgressIndicator(color: kGreenNeon));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: kGreenNeon),
+            const SizedBox(height: 16),
+            const Text('Cargando reservas...',
+                style: TextStyle(color: kLightGray, fontSize: 13)),
+          ],
+        ),
+      );
     }
 
     if (_error != null) {
@@ -314,19 +306,18 @@ class _ReservasScreenState extends State<ReservasScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
+            const Icon(Icons.wifi_off_rounded,
                 color: Colors.redAccent, size: 48),
             const SizedBox(height: 12),
-            Text(_error!,
-                style: const TextStyle(color: kLightGray),
-                textAlign: TextAlign.center),
+            const Text('No se pudieron cargar las reservas',
+                style: TextStyle(color: kLightGray)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Reintentar'),
               style: ElevatedButton.styleFrom(
                   backgroundColor: kGreenNeon,
-                  foregroundColor: kCarbonBlack),
+                  foregroundColor: Colors.black),
               onPressed: _cargarDatos,
             ),
           ],
@@ -340,15 +331,28 @@ class _ReservasScreenState extends State<ReservasScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.calendar_month_rounded,
-                color: kLightGray.withOpacity(0.3), size: 64),
+                color: kLightGray.withOpacity(0.25), size: 72)
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scaleXY(
+                    begin: 0.95,
+                    end: 1.05,
+                    duration: 2000.ms,
+                    curve: Curves.easeInOut),
             const SizedBox(height: 16),
             Text(
               _reservas.isEmpty
-                  ? 'No tienes reservas aún.'
-                  : 'No hay reservas con este filtro.',
-              style: const TextStyle(color: kLightGray, fontSize: 15),
-              textAlign: TextAlign.center,
+                  ? 'No tienes reservas aún'
+                  : 'No hay reservas con este filtro',
+              style: const TextStyle(
+                  color: kLightGray,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500),
             ),
+            if (_reservas.isEmpty) ...[
+              const SizedBox(height: 6),
+              const Text('¡Reserva una cancha y empieza a jugar!',
+                  style: TextStyle(color: kLightGray, fontSize: 13)),
+            ],
           ],
         ),
       );
@@ -364,6 +368,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
           colorEstado: _colorEstado(reserva.estado),
           iconEstado: _iconEstado(reserva.estado),
           currencyFormat: currencyFormat,
+          index: i,
           onCancelar: reserva.estado == 'RESERVADO'
               ? () => _procesoCancelacion(reserva.id)
               : null,
@@ -380,6 +385,7 @@ class _ReservaCard extends StatelessWidget {
   final IconData iconEstado;
   final NumberFormat currencyFormat;
   final VoidCallback? onCancelar;
+  final int index;
 
   const _ReservaCard({
     required this.reserva,
@@ -387,6 +393,7 @@ class _ReservaCard extends StatelessWidget {
     required this.iconEstado,
     required this.currencyFormat,
     required this.onCancelar,
+    required this.index,
   });
 
   String _horaFin(String hora) {
@@ -405,29 +412,37 @@ class _ReservaCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: kDarkGray,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorEstado.withOpacity(0.2)),
+        color: kCardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorEstado.withOpacity(0.18), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: colorEstado.withOpacity(0.06),
+            blurRadius: 16,
+            spreadRadius: -2,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            // Ícono estado
+            // ── Ícono estado ──────────────────────────
             Container(
-              width: 44,
-              height: 44,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
-                color: colorEstado.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: colorEstado.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: colorEstado.withOpacity(0.2)),
               ),
-              child:
-                  Icon(iconEstado, color: colorEstado, size: 22),
+              child: Icon(iconEstado, color: colorEstado, size: 22),
             ),
             const SizedBox(width: 14),
 
-            // Info
+            // ── Info ──────────────────────────────────
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,19 +453,37 @@ class _ReservaCard extends StatelessWidget {
                         color: kWhite,
                         fontWeight: FontWeight.bold,
                         fontSize: 15),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$fecha  •  $hora – $horaFin',
-                    style: const TextStyle(
-                        color: kLightGray, fontSize: 12),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_rounded,
+                          size: 11,
+                          color: kLightGray.withOpacity(0.6)),
+                      const SizedBox(width: 4),
+                      Text(fecha,
+                          style: TextStyle(
+                              color: kLightGray.withOpacity(0.8),
+                              fontSize: 12)),
+                      const SizedBox(width: 10),
+                      Icon(Icons.access_time_rounded,
+                          size: 11,
+                          color: kLightGray.withOpacity(0.6)),
+                      const SizedBox(width: 4),
+                      Text('$hora – $horaFin',
+                          style: TextStyle(
+                              color: kLightGray.withOpacity(0.8),
+                              fontSize: 12)),
+                    ],
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 10),
 
-            // Precio + acción
+            // ── Precio + acción ───────────────────────
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -474,14 +507,11 @@ class _ReservaCard extends StatelessWidget {
                         border: Border.all(
                             color: Colors.redAccent.withOpacity(0.3)),
                       ),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(
-                          color: Colors.redAccent,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('Cancelar',
+                          style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold)),
                     ),
                   )
                 else
@@ -496,10 +526,9 @@ class _ReservaCard extends StatelessWidget {
                       reserva.estado[0] +
                           reserva.estado.substring(1).toLowerCase(),
                       style: TextStyle(
-                        color: colorEstado,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          color: colorEstado,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
               ],
@@ -507,7 +536,10 @@ class _ReservaCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(delay: (index * 70).ms, duration: 350.ms)
+        .slideY(begin: 0.12);
   }
 }
 
@@ -526,24 +558,30 @@ class _KpiChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: kDarkGray,
-        borderRadius: BorderRadius.circular(10),
+        color: kCardColor,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.06),
+            blurRadius: 10,
+            spreadRadius: -2,
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label,
-              style:
-                  const TextStyle(color: kLightGray, fontSize: 12)),
-          const SizedBox(width: 8),
           Text(value,
               style: TextStyle(
                   color: color,
                   fontWeight: FontWeight.bold,
-                  fontSize: 13)),
+                  fontSize: 16)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: const TextStyle(color: kLightGray, fontSize: 11)),
         ],
       ),
     );
