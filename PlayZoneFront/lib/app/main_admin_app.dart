@@ -1,121 +1,121 @@
+// lib/app/main_admin_app.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import '../util/constants.dart';
 
-// Paleta de colores y estilos
-const kGreenNeon = Color(0xFF00FF85);
-const kCarbonBlack = Color(0xFF121212);
-const kDarkGray = Color(0xFF2F2F2F);
-const kWhite = Color(0xFFFFFFFF);
-const kOrangeAccent = Color(0xFFFF6B00);
-const kLightGray = Color(0xFFC9C9C9);
+// ── Modelos ───────────────────────────────────────────────────────────────
+class _Stats {
+  final int totalUsuarios, totalCanchas, totalReservas, reservasHoy,
+      reservasActivas, reservasCanceladas;
+  final double ingresosTotales, ingresosHoy;
 
-final kShadow = [
-  BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(0, 6)),
-];
+  _Stats.fromJson(Map<String, dynamic> j)
+      : totalUsuarios = j['totalUsuarios'] ?? 0,
+        totalCanchas = j['totalCanchas'] ?? 0,
+        totalReservas = j['totalReservas'] ?? 0,
+        reservasHoy = j['reservasHoy'] ?? 0,
+        reservasActivas = j['reservasActivas'] ?? 0,
+        reservasCanceladas = j['reservasCanceladas'] ?? 0,
+        ingresosTotales = (j['ingresosTotales'] ?? 0).toDouble(),
+        ingresosHoy = (j['ingresosHoy'] ?? 0).toDouble();
+}
 
-// Mock data para dashboard y tablas
-final mockStats = {
-  'usuarios': 1240,
-  'canchas': 58,
-  'reservasHoy': 32,
-  'ingresos': 4200000,
-};
+class _Usuario {
+  final int id;
+  final String nombre, correo, role;
+  final bool emailVerified;
 
-final mockActividad = [
-  {
-    'tipo': 'reserva',
-    'detalle': 'Nueva reserva en Cancha Central',
-    'fecha': 'Hoy',
-  },
-  {
-    'tipo': 'usuario',
-    'detalle': 'Usuario registrado: Ana Torres',
-    'fecha': 'Ayer',
-  },
-  {
-    'tipo': 'cancha',
-    'detalle': 'Cancha agregada: Polideportivo Sur',
-    'fecha': 'Hace 2 días',
-  },
-];
+  _Usuario.fromJson(Map<String, dynamic> j)
+      : id = j['id'] ?? 0,
+        nombre = j['nombre'] ?? '',
+        correo = j['correo'] ?? '',
+        role = j['role'] ?? j['rolNombre'] ?? '',
+        emailVerified = j['emailVerified'] ?? false;
+}
 
-final mockUsuarios = [
-  {
-    'nombre': 'Juan Castro',
-    'correo': 'juan@email.com',
-    'rol': 'Administrador',
-    'estado': 'Activo',
-    'fecha': '2023-10-01',
-  },
-  {
-    'nombre': 'Ana Torres',
-    'correo': 'ana@email.com',
-    'rol': 'Propietario',
-    'estado': 'Suspendido',
-    'fecha': '2023-09-15',
-  },
-  {
-    'nombre': 'Carlos Ruiz',
-    'correo': 'carlos@email.com',
-    'rol': 'Cliente',
-    'estado': 'Activo',
-    'fecha': '2023-10-10',
-  },
-];
+class _Cancha {
+  final int id;
+  final String nombre;
+  final bool disponibilidad;
+  final double latitud, longitud;
 
-final mockCanchas = [
-  {
-    'nombre': 'Cancha Central',
-    'propietario': 'Juan Castro',
-    'ubicacion': 'Zona Norte',
-    'precio': 50000,
-    'disponible': true,
-  },
-  {
-    'nombre': 'Polideportivo Sur',
-    'propietario': 'Ana Torres',
-    'ubicacion': 'Zona Sur',
-    'precio': 35000,
-    'disponible': false,
-  },
-];
+  _Cancha.fromJson(Map<String, dynamic> j)
+      : id = j['id'] ?? 0,
+        nombre = j['nombre'] ?? '',
+        disponibilidad = j['disponibilidad'] ?? false,
+        latitud = (j['latitud'] ?? 0).toDouble(),
+        longitud = (j['longitud'] ?? 0).toDouble();
+}
 
-final mockReservas = [
-  {
-    'usuario': 'Carlos Ruiz',
-    'cancha': 'Cancha Central',
-    'fecha': '2023-10-12',
-    'hora': '18:00',
-    'estado': 'Pendiente',
-  },
-  {
-    'usuario': 'Ana Torres',
-    'cancha': 'Polideportivo Sur',
-    'fecha': '2023-10-11',
-    'hora': '20:00',
-    'estado': 'Confirmada',
-  },
-];
+class _Reserva {
+  final int id;
+  final String usuarioNombre, usuarioCorreo, canchaNombre, estado;
+  final String fechaReserva, horaInicio;
+  final double totalPago;
 
-final mockPropietarios = [
-  {
-    'nombre': 'Ana Torres',
-    'canchas': ['Polideportivo Sur'],
-    'estado': 'Aprobado',
-  },
-  {
-    'nombre': 'Juan Castro',
-    'canchas': ['Cancha Central'],
-    'estado': 'Pendiente',
-  },
-];
+  _Reserva.fromJson(Map<String, dynamic> j)
+      : id = j['id'] ?? 0,
+        usuarioNombre = j['usuarioNombre'] ?? '',
+        usuarioCorreo = j['usuarioCorreo'] ?? '',
+        canchaNombre = j['canchaNombre'] ?? '',
+        estado = j['estado'] ?? '',
+        fechaReserva = j['fechaReserva'] ?? '',
+        horaInicio = (j['horaInicio'] ?? '').toString().substring(0, 5),
+        totalPago = (j['totalPago'] ?? 0).toDouble();
+}
 
-// Mock perfil admin
-final Map<String, dynamic> mockAdmin = {
-  'nombre': 'Admin PlayZone',
-  'correo': 'admin.app@gmail.com',
-  'avatar': 'https://randomuser.me/api/portraits/men/45.jpg',
-};
+// ── Servicio ──────────────────────────────────────────────────────────────
+class _AdminService {
+  final _base = '$baseUrl/admin';
 
+  Future<_Stats> getStats() async {
+    final res = await http.get(Uri.parse('$_base/stats'));
+    return _Stats.fromJson(jsonDecode(res.body));
+  }
+
+  Future<List<_Usuario>> getUsuarios() async {
+    final res = await http.get(Uri.parse('$_base/usuarios'));
+    return (jsonDecode(res.body) as List)
+        .map((j) => _Usuario.fromJson(j))
+        .toList();
+  }
+
+  Future<List<_Cancha>> getCanchas() async {
+    final res = await http.get(Uri.parse('$_base/canchas'));
+    return (jsonDecode(res.body) as List)
+        .map((j) => _Cancha.fromJson(j))
+        .toList();
+  }
+
+  Future<List<_Reserva>> getReservas() async {
+    final res = await http.get(Uri.parse('$_base/reservas'));
+    return (jsonDecode(res.body) as List)
+        .map((j) => _Reserva.fromJson(j))
+        .toList();
+  }
+
+  Future<void> eliminarUsuario(int id) async {
+    await http.delete(Uri.parse('$_base/usuarios/$id'));
+  }
+
+  Future<void> toggleDisponibilidad(int id) async {
+    await http.put(Uri.parse('$_base/canchas/$id/disponibilidad'));
+  }
+
+  Future<void> cambiarEstadoReserva(int id, String estado) async {
+    await http.put(
+      Uri.parse('$_base/reservas/$id/estado'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'estado': estado}),
+    );
+  }
+}
+
+// ── Página principal ──────────────────────────────────────────────────────
 class MainAdminAppPage extends StatefulWidget {
   const MainAdminAppPage({super.key});
 
@@ -126,34 +126,42 @@ class MainAdminAppPage extends StatefulWidget {
 class _MainAdminAppPageState extends State<MainAdminAppPage> {
   int _selectedIndex = 0;
   String _searchText = '';
+  final _service = _AdminService();
+  final _currency = NumberFormat.currency(
+      locale: 'es_CO', symbol: '\$', decimalDigits: 0);
 
-  // Sidebar items
-  final List<_SidebarItem> _sidebarItems = [
-    _SidebarItem('Dashboard', Icons.dashboard),
-    _SidebarItem('Usuarios', Icons.people),
-    _SidebarItem('Canchas', Icons.sports_soccer),
-    _SidebarItem('Reservas', Icons.calendar_month),
-    _SidebarItem('Propietarios', Icons.business),
-    _SidebarItem('Configuración', Icons.settings),
+  final _sidebarItems = [
+    ('Dashboard', Icons.dashboard_rounded),
+    ('Usuarios', Icons.people_rounded),
+    ('Canchas', Icons.sports_soccer_rounded),
+    ('Reservas', Icons.calendar_month_rounded),
+    ('Configuración', Icons.settings_rounded),
   ];
 
-  // Cambia la vista principal según el menú lateral
-  Widget _buildMainView() {
+  Widget _buildView() {
     switch (_selectedIndex) {
       case 0:
-        return _DashboardView();
+        return _DashboardView(service: _service, currency: _currency);
       case 1:
-        return _UsuariosView(search: _searchText);
+        return _UsuariosView(
+            service: _service,
+            search: _searchText,
+            onRefresh: () => setState(() {}));
       case 2:
-        return _CanchasView(search: _searchText);
+        return _CanchasView(
+            service: _service,
+            search: _searchText,
+            onRefresh: () => setState(() {}));
       case 3:
-        return _ReservasView(search: _searchText);
+        return _ReservasView(
+            service: _service,
+            search: _searchText,
+            currency: _currency,
+            onRefresh: () => setState(() {}));
       case 4:
-        return _PropietariosView(search: _searchText);
-      case 5:
-        return _ConfiguracionView();
+        return _ConfigView();
       default:
-        return _DashboardView();
+        return _DashboardView(service: _service, currency: _currency);
     }
   }
 
@@ -163,29 +171,231 @@ class _MainAdminAppPageState extends State<MainAdminAppPage> {
       backgroundColor: kCarbonBlack,
       body: Row(
         children: [
-          // Sidebar
-          _Sidebar(
-            items: _sidebarItems,
-            selectedIndex: _selectedIndex,
-            onTap: (i) => setState(() => _selectedIndex = i),
+          // ── Sidebar ────────────────────────────────────
+          Container(
+            width: 220,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              border:
+                  Border(right: BorderSide(color: kBorderColor, width: 1)),
+            ),
+            child: Column(
+              children: [
+                // Logo
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          gradient: kGreenGlow,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: kGreenShadow,
+                        ),
+                        child: const Icon(Icons.sports_soccer_rounded,
+                            color: Colors.black, size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text('PlayZone',
+                          style: TextStyle(
+                            color: kWhite,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            letterSpacing: 0.5,
+                          )),
+                    ],
+                  ),
+                ).animate().fadeIn(duration: 400.ms),
+
+                Container(height: 1, color: kBorderColor),
+                const SizedBox(height: 8),
+
+                // Items
+                ..._sidebarItems.asMap().entries.map((e) {
+                  final i = e.key;
+                  final (label, icon) = e.value;
+                  final sel = i == _selectedIndex;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 2, horizontal: 12),
+                    child: InkWell(
+                      onTap: () =>
+                          setState(() => _selectedIndex = i),
+                      borderRadius: BorderRadius.circular(12),
+                      child: AnimatedContainer(
+                        duration: 200.ms,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 11, horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? kGreenNeon.withOpacity(0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: sel
+                              ? Border.all(
+                                  color: kGreenNeon.withOpacity(0.25))
+                              : null,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(icon,
+                                color: sel ? kGreenNeon : kLightGray,
+                                size: 18),
+                            const SizedBox(width: 12),
+                            Text(label,
+                                style: TextStyle(
+                                  color: sel ? kGreenNeon : kLightGray,
+                                  fontWeight: sel
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  fontSize: 14,
+                                )),
+                            if (sel) ...[
+                              const Spacer(),
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: kGreenNeon),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: (150 + i * 50).ms)
+                      .slideX(begin: -0.1);
+                }),
+
+                const Spacer(),
+                Container(height: 1, color: kBorderColor),
+
+                // Logout
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: InkWell(
+                    onTap: () => context.go('/'),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: Colors.redAccent.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.logout_rounded,
+                              color: Colors.redAccent, size: 18),
+                          SizedBox(width: 8),
+                          Text('Cerrar sesión',
+                              style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ).animate().fadeIn(delay: 400.ms),
+              ],
+            ),
           ),
-          // Main content
+
+          // ── Contenido ──────────────────────────────────
           Expanded(
             child: Column(
               children: [
-                // Header
-                _Header(
-                  searchText: _searchText,
-                  onSearchChanged: (value) =>
-                      setState(() => _searchText = value),
-                  admin: mockAdmin,
-                  notifications: 3,
+                // Top bar
+                Container(
+                  color: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 28, vertical: 14),
+                  child: Row(
+                    children: [
+                      const Text('Panel de Administración',
+                          style: TextStyle(
+                              color: kWhite,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17)),
+                      const SizedBox(width: 28),
+                      Expanded(
+                        child: SizedBox(
+                          height: 38,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Buscar...',
+                              hintStyle: const TextStyle(
+                                  color: kLightGray, fontSize: 13),
+                              filled: true,
+                              fillColor: kDarkGray,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: const BorderSide(
+                                      color: kBorderColor, width: 1)),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: const BorderSide(
+                                      color: kGreenNeon, width: 1.5)),
+                              prefixIcon: const Icon(Icons.search_rounded,
+                                  color: kLightGray, size: 18),
+                            ),
+                            style: const TextStyle(
+                                color: kWhite, fontSize: 13),
+                            onChanged: (v) =>
+                                setState(() => _searchText = v),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: kGreenNeon.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: kGreenNeon.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.admin_panel_settings_rounded,
+                                color: kGreenNeon, size: 14),
+                            SizedBox(width: 6),
+                            Text('Super Admin',
+                                style: TextStyle(
+                                    color: kGreenNeon,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                // Main view
+                Container(height: 1, color: kBorderColor),
+
                 Expanded(
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: _buildMainView(),
+                    duration: 250.ms,
+                    transitionBuilder: (child, anim) =>
+                        FadeTransition(opacity: anim, child: child),
+                    child: KeyedSubtree(
+                        key: ValueKey(_selectedIndex),
+                        child: _buildView()),
                   ),
                 ),
               ],
@@ -197,962 +407,1057 @@ class _MainAdminAppPageState extends State<MainAdminAppPage> {
   }
 }
 
-// Sidebar Widget
-class _Sidebar extends StatelessWidget {
-  final List<_SidebarItem> items;
-  final int selectedIndex;
-  final ValueChanged<int> onTap;
+// ── Dashboard ─────────────────────────────────────────────────────────────
+class _DashboardView extends StatefulWidget {
+  final _AdminService service;
+  final NumberFormat currency;
+  const _DashboardView(
+      {required this.service, required this.currency});
 
-  const _Sidebar({
-    required this.items,
-    required this.selectedIndex,
-    required this.onTap,
-  });
+  @override
+  State<_DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<_DashboardView> {
+  _Stats? _stats;
+  List<_Reserva> _recientes = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargar();
+  }
+
+  Future<void> _cargar() async {
+    try {
+      final stats = await widget.service.getStats();
+      final reservas = await widget.service.getReservas();
+      setState(() {
+        _stats = stats;
+        _recientes = reservas.take(5).toList();
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(
+          child: CircularProgressIndicator(color: kGreenNeon));
+    }
+    final s = _stats;
+    if (s == null) {
+      return const Center(
+          child: Text('Error cargando datos',
+              style: TextStyle(color: kLightGray)));
+    }
+
     return Container(
-      width: 220,
-      color: kDarkGray,
-      child: Column(
-        children: [
-          const SizedBox(height: 32),
-          // Logo
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.sports_soccer, color: kGreenNeon, size: 32),
-              const SizedBox(width: 8),
-              Text(
-                'PlayZone',
-                style: const TextStyle(
-                  color: kWhite,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          // Menu items
-          ...items.asMap().entries.map((entry) {
-            final i = entry.key;
-            final item = entry.value;
-            final selected = i == selectedIndex;
-            return InkWell(
-              onTap: () => onTap(i),
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 16,
-                ),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? kGreenNeon.withOpacity(0.12)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(item.icon, color: selected ? kGreenNeon : kLightGray),
-                    const SizedBox(width: 12),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        color: selected ? kGreenNeon : kLightGray,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        fontFamily: 'Montserrat',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-          const Spacer(),
-          // Perfil y logout
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+      color: kCarbonBlack,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Dashboard',
+                style: TextStyle(
+                    color: kWhite,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text('Resumen general del sistema',
+                style:
+                    TextStyle(color: kLightGray.withOpacity(0.7), fontSize: 13)),
+            const SizedBox(height: 24),
+
+            // ── KPIs fila 1 ──────────────────────────────
+            Row(
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundImage: NetworkImage(mockAdmin['avatar']),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    mockAdmin['nombre'],
-                    style: const TextStyle(
-                      color: kWhite,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.logout, color: kOrangeAccent),
-                  onPressed: () {
-                    // Acción de logout
-                  },
-                ),
+                _KpiCard(
+                    icon: Icons.people_rounded,
+                    label: 'Usuarios',
+                    value: s.totalUsuarios.toString(),
+                    color: kGreenNeon,
+                    index: 0),
+                const SizedBox(width: 14),
+                _KpiCard(
+                    icon: Icons.sports_soccer_rounded,
+                    label: 'Canchas',
+                    value: s.totalCanchas.toString(),
+                    color: kOrangeAccent,
+                    index: 1),
+                const SizedBox(width: 14),
+                _KpiCard(
+                    icon: Icons.calendar_today_rounded,
+                    label: 'Reservas hoy',
+                    value: s.reservasHoy.toString(),
+                    color: const Color(0xFF6B9FFF),
+                    index: 2),
+                const SizedBox(width: 14),
+                _KpiCard(
+                    icon: Icons.attach_money_rounded,
+                    label: 'Ingresos totales',
+                    value: widget.currency.format(s.ingresosTotales),
+                    color: kGreenNeon,
+                    index: 3),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+            const SizedBox(height: 14),
 
-class _SidebarItem {
-  final String label;
-  final IconData icon;
-  const _SidebarItem(this.label, this.icon);
-}
-
-// Header Widget
-class _Header extends StatelessWidget {
-  final String searchText;
-  final ValueChanged<String> onSearchChanged;
-  final Map<String, dynamic> admin;
-  final int notifications;
-
-  const _Header({
-    required this.searchText,
-    required this.onSearchChanged,
-    required this.admin,
-    required this.notifications,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: kCarbonBlack,
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-      child: Row(
-        children: [
-          // Logo
-          Row(
-            children: [
-              Icon(Icons.sports_soccer, color: kGreenNeon, size: 28),
-              const SizedBox(width: 8),
-              Text(
-                'PlayZone Admin',
-                style: const TextStyle(
-                  color: kWhite,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 32),
-          // Search
-          Expanded(
-            child: SizedBox(
-              height: 40,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Buscar usuarios, canchas o reservas...',
-                  hintStyle: const TextStyle(
-                    color: kLightGray,
-                    fontFamily: 'Montserrat',
-                  ),
-                  filled: true,
-                  fillColor: kDarkGray,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: const Icon(Icons.search, color: kLightGray),
-                ),
-                style: const TextStyle(color: kWhite, fontFamily: 'Montserrat'),
-                onChanged: onSearchChanged,
-              ),
+            // ── KPIs fila 2 ──────────────────────────────
+            Row(
+              children: [
+                _KpiCard(
+                    icon: Icons.check_circle_rounded,
+                    label: 'Reservas activas',
+                    value: s.reservasActivas.toString(),
+                    color: kGreenNeon,
+                    index: 4),
+                const SizedBox(width: 14),
+                _KpiCard(
+                    icon: Icons.cancel_rounded,
+                    label: 'Canceladas',
+                    value: s.reservasCanceladas.toString(),
+                    color: Colors.redAccent,
+                    index: 5),
+                const SizedBox(width: 14),
+                _KpiCard(
+                    icon: Icons.receipt_rounded,
+                    label: 'Total reservas',
+                    value: s.totalReservas.toString(),
+                    color: kOrangeAccent,
+                    index: 6),
+                const SizedBox(width: 14),
+                _KpiCard(
+                    icon: Icons.today_rounded,
+                    label: 'Ingresos hoy',
+                    value: widget.currency.format(s.ingresosHoy),
+                    color: const Color(0xFF6B9FFF),
+                    index: 7),
+              ],
             ),
-          ),
-          const SizedBox(width: 24),
-          // Notifications
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications, color: kOrangeAccent),
-                onPressed: () {
-                  // Mostrar notificaciones
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No hay nuevas notificaciones'),
-                    ),
-                  );
-                },
-              ),
-              if (notifications > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: kOrangeAccent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      notifications.toString(),
-                      style: const TextStyle(color: kWhite, fontSize: 12),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          // Perfil admin
-          CircleAvatar(
-            radius: 20,
-            backgroundImage: NetworkImage(admin['avatar']),
-          ),
-        ],
-      ),
-    );
-  }
-}
+            const SizedBox(height: 28),
 
-// Dashboard principal
-class _DashboardView extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: kCarbonBlack,
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Dashboard General',
-            style: TextStyle(
-              color: kWhite,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
+            // ── Reservas recientes ────────────────────────
+            Row(
+              children: [
+                const Text('Reservas recientes',
+                    style: TextStyle(
+                        color: kWhite,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+                const Spacer(),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                      shape: BoxShape.circle, color: kGreenNeon),
+                ),
+                const SizedBox(width: 6),
+                Text('${_recientes.length} registros',
+                    style: const TextStyle(
+                        color: kLightGray, fontSize: 12)),
+              ],
             ),
-          ),
-          const SizedBox(height: 24),
-          // KPIs
-          Row(
-            children: [
-              _KpiCard(
-                icon: Icons.people,
-                label: 'Usuarios',
-                value: mockStats['usuarios'].toString(),
-                color: kGreenNeon,
-              ),
-              _KpiCard(
-                icon: Icons.sports_soccer,
-                label: 'Canchas',
-                value: mockStats['canchas'].toString(),
-                color: kOrangeAccent,
-              ),
-              _KpiCard(
-                icon: Icons.calendar_month,
-                label: 'Reservas Hoy',
-                value: mockStats['reservasHoy'].toString(),
-                color: kGreenNeon,
-              ),
-              _KpiCard(
-                icon: Icons.attach_money,
-                label: 'Ingresos',
-                value: '\$${mockStats['ingresos']}',
-                color: kOrangeAccent,
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          // Actividad reciente
-          const Text(
-            'Actividad Reciente',
-            style: TextStyle(
-              color: kWhite,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...mockActividad.map(
-            (act) => Card(
-              color: kDarkGray,
-              elevation: 2,
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ListTile(
-                leading: Icon(
-                  act['tipo'] == 'reserva'
-                      ? Icons.calendar_month
-                      : act['tipo'] == 'usuario'
-                      ? Icons.person
-                      : Icons.sports_soccer,
-                  color: kGreenNeon,
-                ),
-                title: Text(
-                  act['detalle'] ?? 'Sin detalle',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                subtitle: Text(
-                  act['fecha'] ?? 'Sin fecha',
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+            const SizedBox(height: 12),
 
-// KPI Card Widget
-class _KpiCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  const _KpiCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Card(
-        color: kDarkGray,
-        elevation: 4,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 32),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: kWhite,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: kLightGray,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-            ],
-          ),
+            ..._recientes.asMap().entries.map((e) {
+              final r = e.value;
+              return _ReservaRow(
+                      reserva: r,
+                      currency: widget.currency,
+                      index: e.key)
+                  .animate()
+                  .fadeIn(delay: (e.key * 60).ms)
+                  .slideX(begin: 0.05);
+            }),
+          ],
         ),
       ),
     );
   }
 }
 
-// Usuarios View
-class _UsuariosView extends StatelessWidget {
+// ── Usuarios ──────────────────────────────────────────────────────────────
+class _UsuariosView extends StatefulWidget {
+  final _AdminService service;
   final String search;
-  const _UsuariosView({required this.search});
+  final VoidCallback onRefresh;
+  const _UsuariosView(
+      {required this.service,
+      required this.search,
+      required this.onRefresh});
 
   @override
-  Widget build(BuildContext context) {
-    final usuariosFiltrados = mockUsuarios.where((u) {
-      return search.isEmpty ||
-          (u['nombre']?.toLowerCase() ?? '').contains(search.toLowerCase()) ||
-          (u['correo']?.toLowerCase() ?? '').contains(search.toLowerCase());
-    }).toList();
-
-    return Container(
-      color: kCarbonBlack,
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Gestión de Usuarios',
-            style: TextStyle(
-              color: kWhite,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Tabla de usuarios
-          Expanded(
-            child: SingleChildScrollView(
-              child: DataTable(
-                headingRowColor: MaterialStateProperty.all(kDarkGray),
-                columns: const [
-                  DataColumn(
-                    label: Text('Nombre', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Correo', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Rol', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Estado', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Registro', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Acciones', style: TextStyle(color: kWhite)),
-                  ),
-                ],
-                rows: usuariosFiltrados.map((u) {
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Text(
-                          u['nombre'] ?? 'Sin nombre',
-                          style: const TextStyle(color: kWhite),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          u['correo'] ?? 'Sin correo',
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          u['rol'] ?? 'Sin rol',
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          u['estado'] ?? 'Sin estado',
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          u['fecha'] ?? 'Sin fecha',
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.visibility,
-                                color: kGreenNeon,
-                              ),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit,
-                                color: kOrangeAccent,
-                              ),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.redAccent,
-                              ),
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  State<_UsuariosView> createState() => _UsuariosViewState();
 }
 
-// Canchas View
-class _CanchasView extends StatelessWidget {
-  final String search;
-  const _CanchasView({required this.search});
+class _UsuariosViewState extends State<_UsuariosView> {
+  List<_Usuario> _usuarios = [];
+  bool _loading = true;
 
   @override
-  Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> canchas = []; // lista temporal vacía
-    final search =
-        ''; // temporal, por si 'search' aún no existe o no se pasa por constructor
-
-    final canchasFiltradas = search.isEmpty
-        ? canchas
-        : canchas.where((c) {
-            final nombre = (c['nombre'] ?? '').toString().toLowerCase();
-            final ubicacion = (c['ubicacion'] ?? '').toString().toLowerCase();
-            return nombre.contains(search.toLowerCase()) ||
-                ubicacion.contains(search.toLowerCase());
-          }).toList(); // ✅ ahora la variable está definida
-
-    return Container(
-      color: kCarbonBlack,
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Gestión de Canchas',
-            style: TextStyle(
-              color: kWhite,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
-            ),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: SingleChildScrollView(
-              child: DataTable(
-                headingRowColor: MaterialStateProperty.all(kDarkGray),
-                columns: const [
-                  DataColumn(
-                    label: Text('Nombre', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Propietario', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Ubicación', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Precio/Hora', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Disponible', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Acciones', style: TextStyle(color: kWhite)),
-                  ),
-                ],
-                rows: canchasFiltradas.map((c) {
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Text(
-                          c['nombre'],
-                          style: const TextStyle(color: kWhite),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          c['propietario'],
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          c['ubicacion'],
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          '\$${c['precio']}',
-                          style: const TextStyle(color: kGreenNeon),
-                        ),
-                      ),
-                      DataCell(
-                        Icon(
-                          c['disponible'] ? Icons.check_circle : Icons.cancel,
-                          color: c['disponible']
-                              ? kGreenNeon
-                              : Colors.redAccent,
-                        ),
-                      ),
-                      DataCell(
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.visibility,
-                                color: kGreenNeon,
-                              ),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit,
-                                color: kOrangeAccent,
-                              ),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.redAccent,
-                              ),
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void initState() {
+    super.initState();
+    _cargar();
   }
-}
 
-// Reservas View
-class _ReservasView extends StatelessWidget {
-  final String search;
-  const _ReservasView({required this.search});
-
-  @override
-  Widget build(BuildContext context) {
-    final reservasFiltradas = mockReservas.where((r) {
-      return search.isEmpty ||
-          (r['usuario']?.toString().toLowerCase() ?? '').contains(
-            search.toLowerCase(),
-          ) ||
-          (r['cancha']?.toString().toLowerCase() ?? '').contains(
-            search.toLowerCase(),
-          );
-    }).toList();
-
-    return Container(
-      color: kCarbonBlack,
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Gestión de Reservas',
-            style: TextStyle(
-              color: kWhite,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
-            ),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: SingleChildScrollView(
-              child: DataTable(
-                headingRowColor: MaterialStateProperty.all(kDarkGray),
-                columns: const [
-                  DataColumn(
-                    label: Text('Usuario', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Cancha', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Fecha', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Hora', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Estado', style: TextStyle(color: kWhite)),
-                  ),
-                  DataColumn(
-                    label: Text('Acciones', style: TextStyle(color: kWhite)),
-                  ),
-                ],
-                rows: reservasFiltradas.map((r) {
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Text(
-                          r['usuario']?.toString() ?? '',
-                          style: const TextStyle(color: kWhite),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          r['cancha']?.toString() ?? '',
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          r['fecha']?.toString() ?? '',
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          r['hora']?.toString() ?? '',
-                          style: const TextStyle(color: kLightGray),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          r['estado']?.toString() ?? '',
-                          style: TextStyle(
-                            color: r['estado'] == 'Confirmada'
-                                ? kGreenNeon
-                                : r['estado'] == 'Pendiente'
-                                ? kOrangeAccent
-                                : Colors.redAccent,
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.check_circle,
-                                color: kGreenNeon,
-                              ),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.cancel,
-                                color: Colors.redAccent,
-                              ),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.done_all,
-                                color: kOrangeAccent,
-                              ),
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _cargar() async {
+    try {
+      final data = await widget.service.getUsuarios();
+      setState(() {
+        _usuarios = data;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
   }
-}
 
-// Propietarios View
-class _PropietariosView extends StatelessWidget {
-  final String search;
-  const _PropietariosView({required this.search});
+  List<_Usuario> get _filtrados => _usuarios
+      .where((u) =>
+          widget.search.isEmpty ||
+          u.nombre.toLowerCase().contains(widget.search.toLowerCase()) ||
+          u.correo.toLowerCase().contains(widget.search.toLowerCase()))
+      .toList();
+
+  Color _roleColor(String role) {
+    switch (role.toUpperCase()) {
+      case 'APP_ADMIN':
+        return kOrangeAccent;
+      case 'CANCHA_ADMIN':
+        return const Color(0xFF6B9FFF);
+      default:
+        return kGreenNeon;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final propietariosFiltrados = mockPropietarios.where((p) {
-      return search.isEmpty ||
-          (p['nombre'] ?? '').toString().toLowerCase().contains(
-            search.toLowerCase(),
-          );
-    }).toList();
-
     return Container(
       color: kCarbonBlack,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Gestión de Propietarios',
-            style: TextStyle(
-              color: kWhite,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
-            ),
+          Row(
+            children: [
+              const Text('Usuarios',
+                  style: TextStyle(
+                      color: kWhite,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text('${_filtrados.length} registros',
+                  style:
+                      const TextStyle(color: kLightGray, fontSize: 13)),
+              const SizedBox(width: 12),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, color: kGreenNeon),
+                onPressed: _cargar,
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: ListView.separated(
-              itemCount: propietariosFiltrados.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final p = propietariosFiltrados[i];
-                return Card(
-                  color: kDarkGray,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: ListTile(
-                    leading: Icon(Icons.business, color: kGreenNeon),
-                    title: Text(
-                      p['nombre']?.toString() ?? '',
-                      style: const TextStyle(
-                        color: kWhite,
-                        fontWeight: FontWeight.bold,
-                      ),
+          const SizedBox(height: 16),
+          if (_loading)
+            const Expanded(
+                child: Center(
+                    child:
+                        CircularProgressIndicator(color: kGreenNeon)))
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filtrados.length,
+                itemBuilder: (ctx, i) {
+                  final u = _filtrados[i];
+                  final initial = u.nombre.isNotEmpty
+                      ? u.nombre[0].toUpperCase()
+                      : '?';
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: kCardColor,
+                      borderRadius: BorderRadius.circular(14),
+                      border:
+                          Border.all(color: kBorderColor, width: 1),
                     ),
-                    subtitle: Text(
-                      'Canchas: ${(p['canchas'] as List?)?.join(', ') ?? ''}',
-                      style: const TextStyle(color: kLightGray),
-                    ),
-
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
                       children: [
-                        Chip(
-                          label: Text(
-                            p['estado']?.toString() ?? '',
-                            style: const TextStyle(
-                              color: kWhite,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        // Avatar
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _roleColor(u.role).withOpacity(0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color:
+                                    _roleColor(u.role).withOpacity(0.4)),
                           ),
-                          backgroundColor: p['estado'] == 'Aprobado'
-                              ? kGreenNeon
-                              : p['estado'] == 'Pendiente'
-                              ? kOrangeAccent
-                              : Colors.redAccent,
+                          child: Center(
+                            child: Text(initial,
+                                style: TextStyle(
+                                    color: _roleColor(u.role),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16)),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+
+                        // Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(u.nombre,
+                                  style: const TextStyle(
+                                      color: kWhite,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14)),
+                              Text(u.correo,
+                                  style: const TextStyle(
+                                      color: kLightGray, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+
+                        // Role badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color:
+                                _roleColor(u.role).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: _roleColor(u.role)
+                                    .withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            u.role.replaceAll('_', ' '),
+                            style: TextStyle(
+                                color: _roleColor(u.role),
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.visibility, color: kGreenNeon),
-                          onPressed: () {},
+
+                        // Verificado
+                        Icon(
+                          u.emailVerified
+                              ? Icons.verified_rounded
+                              : Icons.mail_outline_rounded,
+                          color: u.emailVerified
+                              ? kGreenNeon
+                              : kLightGray,
+                          size: 18,
                         ),
+                        const SizedBox(width: 8),
+
+                        // Eliminar
                         IconButton(
-                          icon: const Icon(Icons.check, color: kGreenNeon),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.block,
-                            color: Colors.redAccent,
-                          ),
-                          onPressed: () {},
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: Colors.redAccent, size: 20),
+                          onPressed: () async {
+                            final ok = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: kSurfaceColor,
+                                title: const Text('¿Eliminar usuario?',
+                                    style: TextStyle(color: kWhite)),
+                                content: Text(
+                                    '${u.nombre} será eliminado.',
+                                    style: const TextStyle(
+                                        color: kLightGray)),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: const Text('Cancelar',
+                                          style: TextStyle(
+                                              color: kLightGray))),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.redAccent),
+                                    onPressed: () =>
+                                        Navigator.pop(ctx, true),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (ok == true) {
+                              await widget.service
+                                  .eliminarUsuario(u.id);
+                              _cargar();
+                            }
+                          },
                         ),
                       ],
                     ),
-                  ),
-                );
-              },
+                  )
+                      .animate()
+                      .fadeIn(delay: (i * 40).ms)
+                      .slideY(begin: 0.05);
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 }
 
-// Configuración View
-class _ConfiguracionView extends StatelessWidget {
+// ── Canchas ───────────────────────────────────────────────────────────────
+class _CanchasView extends StatefulWidget {
+  final _AdminService service;
+  final String search;
+  final VoidCallback onRefresh;
+  const _CanchasView(
+      {required this.service,
+      required this.search,
+      required this.onRefresh});
+
+  @override
+  State<_CanchasView> createState() => _CanchasViewState();
+}
+
+class _CanchasViewState extends State<_CanchasView> {
+  List<_Cancha> _canchas = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargar();
+  }
+
+  Future<void> _cargar() async {
+    try {
+      final data = await widget.service.getCanchas();
+      setState(() {
+        _canchas = data;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
+  }
+
+  List<_Cancha> get _filtradas => _canchas
+      .where((c) =>
+          widget.search.isEmpty ||
+          c.nombre.toLowerCase().contains(widget.search.toLowerCase()))
+      .toList();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       color: kCarbonBlack,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Configuración del Sistema',
-            style: TextStyle(
-              color: kWhite,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Montserrat',
+          Row(
+            children: [
+              const Text('Canchas',
+                  style: TextStyle(
+                      color: kWhite,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text('${_filtradas.length} registros',
+                  style:
+                      const TextStyle(color: kLightGray, fontSize: 13)),
+              const SizedBox(width: 12),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, color: kGreenNeon),
+                onPressed: _cargar,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_loading)
+            const Expanded(
+                child: Center(
+                    child:
+                        CircularProgressIndicator(color: kGreenNeon)))
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filtradas.length,
+                itemBuilder: (ctx, i) {
+                  final c = _filtradas[i];
+                  final color =
+                      c.disponibilidad ? kGreenNeon : Colors.redAccent;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: kCardColor,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: color.withOpacity(0.2), width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(Icons.sports_soccer_rounded,
+                              color: color, size: 22),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(c.nombre,
+                                  style: const TextStyle(
+                                      color: kWhite,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14)),
+                              Text(
+                                  'Lat: ${c.latitud.toStringAsFixed(4)}, Lng: ${c.longitud.toStringAsFixed(4)}',
+                                  style: const TextStyle(
+                                      color: kLightGray, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        // Badge disponibilidad
+                        GestureDetector(
+                          onTap: () async {
+                            await widget.service
+                                .toggleDisponibilidad(c.id);
+                            _cargar();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: color.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  c.disponibilidad
+                                      ? Icons.check_circle_rounded
+                                      : Icons.cancel_rounded,
+                                  color: color,
+                                  size: 13,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  c.disponibilidad
+                                      ? 'Disponible'
+                                      : 'No disponible',
+                                  style: TextStyle(
+                                      color: color,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: (i * 40).ms)
+                      .slideY(begin: 0.05);
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Reservas ──────────────────────────────────────────────────────────────
+class _ReservasView extends StatefulWidget {
+  final _AdminService service;
+  final String search;
+  final NumberFormat currency;
+  final VoidCallback onRefresh;
+  const _ReservasView(
+      {required this.service,
+      required this.search,
+      required this.currency,
+      required this.onRefresh});
+
+  @override
+  State<_ReservasView> createState() => _ReservasViewState();
+}
+
+class _ReservasViewState extends State<_ReservasView> {
+  List<_Reserva> _reservas = [];
+  bool _loading = true;
+  String _filtroEstado = 'TODOS';
+
+  @override
+  void initState() {
+    super.initState();
+    _cargar();
+  }
+
+  Future<void> _cargar() async {
+    try {
+      final data = await widget.service.getReservas();
+      setState(() {
+        _reservas = data;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
+  }
+
+  List<_Reserva> get _filtradas => _reservas.where((r) {
+        final matchSearch = widget.search.isEmpty ||
+            r.usuarioNombre
+                .toLowerCase()
+                .contains(widget.search.toLowerCase()) ||
+            r.canchaNombre
+                .toLowerCase()
+                .contains(widget.search.toLowerCase());
+        final matchEstado = _filtroEstado == 'TODOS' ||
+            r.estado.toUpperCase() == _filtroEstado;
+        return matchSearch && matchEstado;
+      }).toList();
+
+  Color _colorEstado(String e) {
+    switch (e.toUpperCase()) {
+      case 'RESERVADO':
+        return kGreenNeon;
+      case 'CANCELADA':
+        return Colors.redAccent;
+      case 'FINALIZADA':
+        return kLightGray;
+      default:
+        return kOrangeAccent;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kCarbonBlack,
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('Reservas',
+                  style: TextStyle(
+                      color: kWhite,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text('${_filtradas.length} registros',
+                  style:
+                      const TextStyle(color: kLightGray, fontSize: 13)),
+              const SizedBox(width: 12),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, color: kGreenNeon),
+                onPressed: _cargar,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Filtros
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: ['TODOS', 'RESERVADO', 'PENDIENTE_PAGO',
+                      'CANCELADA', 'FINALIZADA']
+                  .map((estado) {
+                final sel = _filtroEstado == estado;
+                final color = estado == 'TODOS'
+                    ? kGreenNeon
+                    : _colorEstado(estado);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () =>
+                        setState(() => _filtroEstado = estado),
+                    child: AnimatedContainer(
+                      duration: 200.ms,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: sel
+                            ? color.withOpacity(0.12)
+                            : kDarkGray,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: sel
+                                ? color
+                                : Colors.transparent,
+                            width: 1.2),
+                      ),
+                      child: Text(
+                        estado == 'TODOS'
+                            ? 'Todos'
+                            : estado[0] +
+                                estado
+                                    .substring(1)
+                                    .toLowerCase()
+                                    .replaceAll('_', ' '),
+                        style: TextStyle(
+                            color: sel ? color : kLightGray,
+                            fontSize: 12,
+                            fontWeight: sel
+                                ? FontWeight.bold
+                                : FontWeight.normal),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
-          const SizedBox(height: 24),
-          Card(
-            color: kDarkGray,
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          const SizedBox(height: 12),
+
+          if (_loading)
+            const Expanded(
+                child: Center(
+                    child:
+                        CircularProgressIndicator(color: kGreenNeon)))
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filtradas.length,
+                itemBuilder: (ctx, i) {
+                  final r = _filtradas[i];
+                  final color = _colorEstado(r.estado);
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: kCardColor,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: color.withOpacity(0.18), width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: color.withOpacity(0.2)),
+                          ),
+                          child: Center(
+                            child: Text(
+                              r.id.toString(),
+                              style: TextStyle(
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(r.usuarioNombre,
+                                  style: const TextStyle(
+                                      color: kWhite,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14)),
+                              Text(
+                                  '${r.canchaNombre} · ${r.fechaReserva} ${r.horaInicio}',
+                                  style: const TextStyle(
+                                      color: kLightGray, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          widget.currency.format(r.totalPago),
+                          style: const TextStyle(
+                              color: kWhite,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            r.estado[0] +
+                                r.estado
+                                    .substring(1)
+                                    .toLowerCase()
+                                    .replaceAll('_', ' '),
+                            style: TextStyle(
+                                color: color,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: (i * 35).ms)
+                      .slideY(begin: 0.05);
+                },
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+    );
+  }
+}
+
+// ── Config ────────────────────────────────────────────────────────────────
+class _ConfigView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kCarbonBlack,
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Configuración',
+              style: TextStyle(
+                  color: kWhite,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+          ...[
+            ('Horarios permitidos', '6:00 AM – 11:00 PM',
+                Icons.schedule_rounded),
+            ('Tarifa base', '\$30.000 / hora',
+                Icons.attach_money_rounded),
+            ('Roles disponibles', 'APP_ADMIN · CANCHA_ADMIN · CLIENTE',
+                Icons.people_rounded),
+            ('Soporte técnico', 'soporte@playzone.com',
+                Icons.support_agent_rounded),
+          ].asMap().entries.map((e) {
+            final (label, value, icon) = e.value;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: kCardColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: kBorderColor),
+              ),
+              child: Row(
                 children: [
-                  const Text(
-                    'Horarios permitidos:',
-                    style: TextStyle(
-                      color: kWhite,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: kGreenNeon.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child:
+                        Icon(icon, color: kGreenNeon, size: 18),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '6:00 AM - 11:00 PM',
-                    style: const TextStyle(color: kLightGray),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Políticas y tarifas base:',
-                    style: TextStyle(
-                      color: kWhite,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tarifa base: \$30.000/hora',
-                    style: const TextStyle(color: kLightGray),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Gestión de roles y permisos:',
-                    style: TextStyle(
-                      color: kWhite,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Administrador, Propietario, Cliente',
-                    style: const TextStyle(color: kLightGray),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Soporte técnico:',
-                    style: TextStyle(
-                      color: kWhite,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Correo: soporte@playzone.com',
-                    style: const TextStyle(color: kLightGray),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label,
+                          style: const TextStyle(
+                              color: kLightGray, fontSize: 11)),
+                      Text(value,
+                          style: const TextStyle(
+                              color: kWhite,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500)),
+                    ],
                   ),
                 ],
               ),
+            )
+                .animate()
+                .fadeIn(delay: (e.key * 80).ms)
+                .slideX(begin: -0.05);
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Widgets auxiliares ────────────────────────────────────────────────────
+class _KpiCard extends StatelessWidget {
+  final IconData icon;
+  final String label, value;
+  final Color color;
+  final int index;
+
+  const _KpiCard(
+      {required this.icon,
+      required this.label,
+      required this.value,
+      required this.color,
+      required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kCardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.2)),
+          boxShadow: [
+            BoxShadow(
+                color: color.withOpacity(0.06),
+                blurRadius: 12,
+                spreadRadius: -2)
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(height: 12),
+            Text(value,
+                style: const TextStyle(
+                    color: kWhite,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 2),
+            Text(label,
+                style: const TextStyle(
+                    color: kLightGray, fontSize: 11)),
+          ],
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(delay: (index * 60).ms, duration: 400.ms)
+        .slideY(begin: 0.15);
+  }
+}
+
+class _ReservaRow extends StatelessWidget {
+  final _Reserva reserva;
+  final NumberFormat currency;
+  final int index;
+
+  const _ReservaRow(
+      {required this.reserva,
+      required this.currency,
+      required this.index});
+
+  Color _color() {
+    switch (reserva.estado.toUpperCase()) {
+      case 'RESERVADO':
+        return kGreenNeon;
+      case 'CANCELADA':
+        return Colors.redAccent;
+      case 'FINALIZADA':
+        return kLightGray;
+      default:
+        return kOrangeAccent;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _color();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: kCardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.receipt_rounded, color: color, size: 17),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(reserva.usuarioNombre,
+                    style: const TextStyle(
+                        color: kWhite,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
+                Text('${reserva.canchaNombre} · ${reserva.fechaReserva}',
+                    style: const TextStyle(
+                        color: kLightGray, fontSize: 11)),
+              ],
+            ),
+          ),
+          Text(currency.format(reserva.totalPago),
+              style: const TextStyle(
+                  color: kWhite,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13)),
+          const SizedBox(width: 10),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              reserva.estado[0] +
+                  reserva.estado.substring(1).toLowerCase(),
+              style: TextStyle(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold),
             ),
           ),
         ],

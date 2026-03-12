@@ -1,5 +1,6 @@
 // lib/app/register_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../models/register_request.dart';
@@ -17,12 +18,11 @@ class _RegisterPageState extends State<RegisterPage> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -40,15 +40,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _showSnackBar(String message, {bool isError = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : kGreenNeon,
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(buildSnackBar(message, isError: isError));
   }
 
   Future<void> _handleRegister() async {
@@ -65,7 +58,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       await _authService.register(request: request);
-      _showSnackBar('Te enviamos un código de verificación.', isError: false);
+      _showSnackBar('¡Cuenta creada! Revisa tu correo.', isError: false);
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -90,198 +83,219 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kCarbonBlack,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Header ───────────────────────────────
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.go('/login'),
-                      icon: const Icon(Icons.arrow_back_rounded,
-                          color: kLightGray),
-                      padding: EdgeInsets.zero,
+      body: Container(
+        decoration: const BoxDecoration(gradient: kBgGradient),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Back ─────────────────────────────────
+                  IconButton(
+                    onPressed: () => context.go('/login'),
+                    icon: const Icon(Icons.arrow_back_rounded,
+                        color: kLightGray),
+                    padding: EdgeInsets.zero,
+                  ).animate().fadeIn(duration: 300.ms),
+
+                  const SizedBox(height: 12),
+
+                  // ── Ícono ─────────────────────────────────
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      gradient: kGreenGlow,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: kGreenShadow,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: kGreenNeon.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(14),
-                    border:
-                        Border.all(color: kGreenNeon.withOpacity(0.3)),
-                  ),
-                  child: const Icon(Icons.person_add_rounded,
-                      color: kGreenNeon, size: 28),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Crear cuenta',
-                  style: TextStyle(
-                    color: kWhite,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Text(
-                  'Únete a PlayZone hoy',
-                  style: TextStyle(color: kLightGray, fontSize: 14),
-                ),
-                const SizedBox(height: 32),
+                    child: const Icon(Icons.person_add_rounded,
+                        color: Colors.black, size: 30),
+                  )
+                      .animate()
+                      .fadeIn(delay: 100.ms, duration: 500.ms)
+                      .scale(begin: const Offset(0.7, 0.7)),
 
-                // ── Campos ───────────────────────────────
-                _buildField(
-                  controller: _nameController,
-                  hint: 'Nombre completo',
-                  icon: Icons.person_outline_rounded,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty)
-                      return 'Ingresa tu nombre';
-                    if (v.trim().length < 3)
-                      return 'Mínimo 3 caracteres';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                _buildField(
-                  controller: _emailController,
-                  hint: 'Correo electrónico',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Ingresa tu correo';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                        .hasMatch(v)) return 'Correo inválido';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                _buildField(
-                  controller: _passwordController,
-                  hint: 'Contraseña',
-                  icon: Icons.lock_outline_rounded,
-                  obscure: _obscurePassword,
-                  suffix: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
-                      color: kLightGray,
-                      size: 20,
+                  const Text(
+                    'Crear cuenta',
+                    style: TextStyle(
+                      color: kWhite,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                     ),
-                    onPressed: () => setState(
-                        () => _obscurePassword = !_obscurePassword),
+                  ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.2),
+
+                  const Text(
+                    'Únete a PlayZone hoy',
+                    style: TextStyle(color: kLightGray, fontSize: 14),
+                  ).animate().fadeIn(delay: 200.ms),
+
+                  const SizedBox(height: 28),
+
+                  // ── Campos ───────────────────────────────
+                  _buildField(
+                    controller: _nameController,
+                    hint: 'Nombre completo',
+                    icon: Icons.person_outline_rounded,
+                    delay: 250,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty)
+                        return 'Ingresa tu nombre';
+                      if (v.trim().length < 3) return 'Mínimo 3 caracteres';
+                      return null;
+                    },
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty)
-                      return 'Ingresa una contraseña';
-                    if (v.length < 6) return 'Mínimo 6 caracteres';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                _buildField(
-                  controller: _confirmPasswordController,
-                  hint: 'Confirmar contraseña',
-                  icon: Icons.lock_reset_outlined,
-                  obscure: _obscureConfirm,
-                  suffix: IconButton(
-                    icon: Icon(
-                      _obscureConfirm
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
-                      color: kLightGray,
-                      size: 20,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscureConfirm = !_obscureConfirm),
+                  _buildField(
+                    controller: _emailController,
+                    hint: 'Correo electrónico',
+                    icon: Icons.email_outlined,
+                    delay: 300,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.isEmpty)
+                        return 'Ingresa tu correo';
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                          .hasMatch(v)) return 'Correo inválido';
+                      return null;
+                    },
                   ),
-                  validator: (v) {
-                    if (v != _passwordController.text)
-                      return 'Las contraseñas no coinciden';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                _buildField(
-                  controller: _phoneController,
-                  hint: 'Teléfono',
-                  icon: Icons.phone_outlined,
-                  keyboardType: TextInputType.phone,
-                  validator: (v) {
-                    if (v == null || v.isEmpty)
-                      return 'Ingresa tu teléfono';
-                    if (!RegExp(r'^[0-9]+$').hasMatch(v))
-                      return 'Solo números';
-                    if (v.length < 8 || v.length > 15)
-                      return 'Número inválido';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 28),
-
-                // ── Botón registrar ───────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreenNeon,
-                      foregroundColor: kCarbonBlack,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
+                  _buildField(
+                    controller: _passwordController,
+                    hint: 'Contraseña',
+                    icon: Icons.lock_outline_rounded,
+                    delay: 350,
+                    obscure: _obscurePassword,
+                    suffix: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_rounded
+                            : Icons.visibility_rounded,
+                        color: kLightGray,
+                        size: 20,
+                      ),
+                      onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword),
                     ),
-                    onPressed: _isLoading ? null : _handleRegister,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2.5, color: kCarbonBlack),
-                          )
-                        : const Text(
-                            'Registrarse',
+                    validator: (v) {
+                      if (v == null || v.isEmpty)
+                        return 'Ingresa una contraseña';
+                      if (v.length < 6) return 'Mínimo 6 caracteres';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildField(
+                    controller: _confirmPasswordController,
+                    hint: 'Confirmar contraseña',
+                    icon: Icons.lock_reset_outlined,
+                    delay: 400,
+                    obscure: _obscureConfirm,
+                    suffix: IconButton(
+                      icon: Icon(
+                        _obscureConfirm
+                            ? Icons.visibility_off_rounded
+                            : Icons.visibility_rounded,
+                        color: kLightGray,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureConfirm = !_obscureConfirm),
+                    ),
+                    validator: (v) {
+                      if (v != _passwordController.text)
+                        return 'Las contraseñas no coinciden';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildField(
+                    controller: _phoneController,
+                    hint: 'Teléfono',
+                    icon: Icons.phone_outlined,
+                    delay: 450,
+                    keyboardType: TextInputType.phone,
+                    validator: (v) {
+                      if (v == null || v.isEmpty)
+                        return 'Ingresa tu teléfono';
+                      if (!RegExp(r'^[0-9]+$').hasMatch(v))
+                        return 'Solo números';
+                      if (v.length < 8 || v.length > 15)
+                        return 'Número inválido';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ── Botón registrar ───────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: _isLoading ? null : kGreenGlow,
+                        color: _isLoading ? kDarkGray : null,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: _isLoading ? [] : kGreenShadow,
+                      ),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
+                        ),
+                        onPressed: _isLoading ? null : _handleRegister,
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2.5, color: Colors.black),
+                              )
+                            : const Text('Registrarse',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.black)),
+                      ),
+                    ),
+                  ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
+
+                  const SizedBox(height: 16),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('¿Ya tienes cuenta?',
+                          style:
+                              TextStyle(color: kLightGray, fontSize: 14)),
+                      TextButton(
+                        onPressed: () => context.go('/login'),
+                        style: TextButton.styleFrom(
+                            foregroundColor: kGreenNeon,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6)),
+                        child: const Text('Inicia sesión',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // ── Ya tengo cuenta ───────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('¿Ya tienes cuenta?',
-                        style:
-                            TextStyle(color: kLightGray, fontSize: 14)),
-                    TextButton(
-                      onPressed: () => context.go('/login'),
-                      style: TextButton.styleFrom(
-                          foregroundColor: kGreenNeon,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6)),
-                      child: const Text('Inicia sesión',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
-                    ),
-                  ],
-                ),
-              ],
+                                fontWeight: FontWeight.bold, fontSize: 14)),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 550.ms),
+                ],
+              ),
             ),
           ),
         ),
@@ -293,6 +307,7 @@ class _RegisterPageState extends State<RegisterPage> {
     required TextEditingController controller,
     required String hint,
     required IconData icon,
+    int delay = 0,
     TextInputType keyboardType = TextInputType.text,
     bool obscure = false,
     Widget? suffix,
@@ -314,26 +329,28 @@ class _RegisterPageState extends State<RegisterPage> {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: kBorderColor, width: 1)),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kGreenNeon, width: 1.5),
-        ),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: kGreenNeon, width: 1.5)),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: Colors.redAccent, width: 1.5)),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: Colors.redAccent, width: 1.5)),
         errorStyle:
             const TextStyle(color: Colors.redAccent, fontSize: 12),
       ),
-    );
+    )
+        .animate()
+        .fadeIn(delay: delay.ms, duration: 350.ms)
+        .slideX(begin: -0.06);
   }
 }
