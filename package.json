@@ -1,8 +1,0 @@
-{
-  "private": true,
-  "scripts": {
-    "install:backend": "npm --prefix PlayZoneAPI install --include=dev",
-    "build": "npm run install:backend && npm --prefix PlayZoneAPI run build",
-    "start": "npm --prefix PlayZoneAPI start"
-  }
-}
