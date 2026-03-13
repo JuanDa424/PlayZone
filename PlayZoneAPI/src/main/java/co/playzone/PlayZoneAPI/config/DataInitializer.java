@@ -21,10 +21,10 @@ public class DataInitializer implements ApplicationRunner {
 	public void run(ApplicationArguments args) {
 		List<String> roles = List.of("CLIENTE", "CANCHA_ADMIN", "APP_ADMIN");
 
-		for (String nombreRol : roles) {
-			if (rolRepositorio.findByNombre(nombreRol).isEmpty()) {
+		for (String codigo : roles) {
+			if (rolRepositorio.findByCodigo(codigo).isEmpty()) {
 				Rol rol = new Rol();
-				rol.setNombre(nombreRol);
+				rol.setCodigo(codigo);
 				rolRepositorio.save(rol);
 			}
 		}
