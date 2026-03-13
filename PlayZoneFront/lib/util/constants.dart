@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 //const String baseUrlTarifas = 'http://10.5.19.142:8080/tarifas';
 //const String baseUrlReserva = '$baseUrl/reservas';
 
-
 // ──DESPLIEGUE PRODUCCION ──────────────────────────────────────────────────────────────────
 //MOVIL
 const String baseUrl = 'https://playzone-production.up.railway.app/api';
-const String baseUrlTarifas = 'https://playzone-production.up.railway.app/tarifas';
+const String baseUrlTarifas =
+    'https://playzone-production.up.railway.app/tarifas';
 const String baseUrlReserva = '$baseUrl/reservas';
 
 //WEB
@@ -19,22 +19,21 @@ const String baseUrlReserva = '$baseUrl/reservas';
 //const String baseUrlTarifas = 'http://localhost:8080/tarifas';
 //const String baseUrlReserva = '$baseUrl/reservas';
 
-
 // ── Colores base ──────────────────────────────────────────────────────────
-const kGreenNeon     = Color(0xFF00FF85);
-const kCarbonBlack   = Color(0xFF0D0D0D);
-const kSurfaceColor  = Color(0xFF1A1A1A);
-const kDarkGray      = Color(0xFF252525);
-const kCardColor     = Color(0xFF1E1E1E);
-const kWhite         = Color(0xFFFFFFFF);
-const kOrangeAccent  = Color(0xFFFF6B00);
-const kLightGray     = Color(0xFFAAAAAA);
-const kBorderColor   = Color(0xFF2E2E2E);
+const kGreenNeon = Color(0xFF00FF85);
+const kCarbonBlack = Color(0xFF0D0D0D);
+const kSurfaceColor = Color(0xFF1A1A1A);
+const kDarkGray = Color(0xFF252525);
+const kCardColor = Color(0xFF1E1E1E);
+const kWhite = Color(0xFFFFFFFF);
+const kOrangeAccent = Color(0xFFFF6B00);
+const kLightGray = Color(0xFFAAAAAA);
+const kBorderColor = Color(0xFF2E2E2E);
 
 // ── Snackbar colors (alto contraste) ─────────────────────────────────────
-const kSnackSuccess  = Color(0xFF003D1F); // fondo verde oscuro
-const kSnackError    = Color(0xFF3D0000); // fondo rojo oscuro
-const kSnackInfo     = Color(0xFF1A1A2E); // fondo azul oscuro
+const kSnackSuccess = Color(0xFF003D1F); // fondo verde oscuro
+const kSnackError = Color(0xFF3D0000); // fondo rojo oscuro
+const kSnackInfo = Color(0xFF1A1A2E); // fondo azul oscuro
 
 // ── Gradientes ────────────────────────────────────────────────────────────
 const kBgGradient = LinearGradient(
@@ -93,18 +92,18 @@ SnackBar buildSnackBar(
   final bgColor = isError
       ? kSnackError
       : isInfo
-          ? kSnackInfo
-          : kSnackSuccess;
+      ? kSnackInfo
+      : kSnackSuccess;
   final textColor = isError
       ? const Color(0xFFFF6B6B)
       : isInfo
-          ? const Color(0xFF6B9FFF)
-          : kGreenNeon;
+      ? const Color(0xFF6B9FFF)
+      : kGreenNeon;
   final defaultIcon = isError
       ? Icons.error_rounded
       : isInfo
-          ? Icons.info_rounded
-          : Icons.check_circle_rounded;
+      ? Icons.info_rounded
+      : Icons.check_circle_rounded;
 
   return SnackBar(
     content: Row(
