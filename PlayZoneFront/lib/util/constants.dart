@@ -3,8 +3,15 @@ import 'package:flutter/material.dart';
 
 // ── URLs ──────────────────────────────────────────────────────────────────
 //MOVIL
-const String baseUrl = 'http://10.5.19.142:8080/api';
-const String baseUrlTarifas = 'http://10.5.19.142:8080/tarifas';
+//const String baseUrl = 'http://10.5.19.142:8080/api';
+//const String baseUrlTarifas = 'http://10.5.19.142:8080/tarifas';
+//const String baseUrlReserva = '$baseUrl/reservas';
+
+
+// ──DESPLIEGUE PRODUCCION ──────────────────────────────────────────────────────────────────
+//MOVIL
+const String baseUrl = 'https://playzone-production.up.railway.app/api';
+const String baseUrlTarifas = 'https://playzone-production.up.railway.app/tarifas';
 const String baseUrlReserva = '$baseUrl/reservas';
 
 //WEB

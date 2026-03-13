@@ -9,4 +9,7 @@ import co.playzone.PlayZoneAPI.model.Rol;
 public interface RolRepositorio extends JpaRepository<Rol, Long> {
 	Optional<Rol> findByCodigo(String codigo); // "APP_ADMIN", "CANCHA_ADMIN", "CLIENTE"
 	
+	Optional<Rol> findByNombre(String nombre);
+
+	
 }
