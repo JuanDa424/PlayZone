@@ -1,36 +1,60 @@
-// co/playzone/PlayZoneAPI/service/EmailService.java
 package co.playzone.PlayZoneAPI.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
-	@Autowired
-	private JavaMailSender mailSender;
+    @Value("${brevo.api.key}")
+    private String apiKey;
 
-	public void sendVerificationEmail(String toEmail, String code) {
-		SimpleMailMessage message = new SimpleMailMessage();
-		message.setTo(toEmail);
-		message.setSubject("Código de verificación PlayZone");
-		message.setText("¡Hola!\n\n" + "Gracias por registrarte en PlayZone.\n" + "Tu código de verificación es: "
-				+ code + "\n\n" + "Este código expira en 10 minutos.\n\n" + "Si no fuiste tú, ignora este mensaje.\n\n"
-				+ "– El equipo de PlayZone");
-		mailSender.send(message);
-	}
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
-	public void sendPasswordResetEmail(String toEmail, String code) {
-		SimpleMailMessage message = new SimpleMailMessage();
-		message.setTo(toEmail);
-		message.setSubject("Recuperación de contraseña PlayZone");
-		message.setText("¡Hola!\n\n" + "Recibimos una solicitud para restablecer tu contraseña en PlayZone.\n"
-				+ "Tu código de recuperación es: " + code + "\n\n" + "Este código expira en 10 minutos.\n\n"
-				+ "Si no fuiste tú, ignora este mensaje.\n\n" + "– El equipo de PlayZone");
-		mailSender.send(message);
-	}
+    private void sendEmail(String toEmail, String subject, String textContent) {
+        String body = String.format("""
+                {
+                  "sender": { "name": "PlayZone", "email": "a55b2a001@smtp-brevo.com" },
+                  "to": [{ "email": "%s" }],
+                  "subject": "%s",
+                  "textContent": "%s"
+                }
+                """, toEmail, subject, textContent.replace("\n", "\\n").replace("\"", "\\\""));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                .header("accept", "application/json")
+                .header("api-key", apiKey)
+                .header("content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 201) {
+                throw new RuntimeException("Error enviando email: " + response.body());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Fallo al enviar email a " + toEmail, e);
+        }
+    }
+
+    public void sendVerificationEmail(String toEmail, String code) {
+        String subject = "Codigo de verificacion PlayZone";
+        String text = "Hola!\n\nGracias por registrarte en PlayZone.\nTu codigo de verificacion es: "
+                + code + "\n\nEste codigo expira en 10 minutos.\n\nSi no fuiste tu, ignora este mensaje.\n\n- El equipo de PlayZone";
+        sendEmail(toEmail, subject, text);
+    }
+
+    public void sendPasswordResetEmail(String toEmail, String code) {
+        String subject = "Recuperacion de contrasena PlayZone";
+        String text = "Hola!\n\nRecibimos una solicitud para restablecer tu contrasena en PlayZone.\nTu codigo de recuperacion es: "
+                + code + "\n\nEste codigo expira en 10 minutos.\n\nSi no fuiste tu, ignora este mensaje.\n\n- El equipo de PlayZone";
+        sendEmail(toEmail, subject, text);
+    }
 }
