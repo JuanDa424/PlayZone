@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
-import '../services/chat_service.dart';
+import 'package:flutter/material.dart'; 
+
+// IMPORTA TUS COLORES AQUÍ
+import '../util/constants.dart';
+import '../util/chat_logic.dart';
 
 class ChatWidget extends StatefulWidget {
   const ChatWidget({super.key});
@@ -10,225 +13,194 @@ class ChatWidget extends StatefulWidget {
 
 class _ChatWidgetState extends State<ChatWidget> {
   final List<Map<String, String>> _messages = [];
-  Map<String, dynamic>? _conversationState;
   final TextEditingController _controller = TextEditingController();
   bool _loading = false;
-  bool _initialized = false;
 
-  // predefined questions shown as buttons for quick access
-  static const List<String> _suggestedQuestions = [
-    '¿Cómo puedo buscar canchas?',
-    '¿Cómo reservo?',
-    '¿Cómo pago?',
-    '¿Qué hace esta app?'
+  final List<String> _suggested = [
+    '¿Cómo reservar?',
+    'Buscar cancha',
+    '¿Cómo pagar?',
+    'Ver reservas',
+    'Cancelar reserva'
   ];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        // welcome message explaining how to use the assistant
-        _messages.add({
-          'from': 'bot',
-          'text':
-              'Hola, soy el asistente de PlayZone. Puedo responder preguntas sobre cómo usar la aplicación. "Toca" una de las sugerencias o escribe tu pregunta.'
-        });
-        _initialized = true;
-      });
+
+    _messages.add({
+      'from': 'bot',
+      'text':
+          'Hola 👋 Soy el asistente de PlayZone.\nPuedes tocar una opción o escribir tu pregunta.'
     });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _send() async {
+  void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
     setState(() {
       _messages.add({'from': 'user', 'text': text});
       _controller.clear();
       _loading = true;
     });
-    try {
-      final resp = await ChatService.sendMessage(text, _conversationState);
-      final botMessage = resp['message'] ?? 'No hay respuesta';
+
+    final reply = ChatLogic.getResponse(text);
+
+    Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
-        _messages.add({'from': 'bot', 'text': botMessage.toString()});
-        _conversationState = resp['conversation_state'] ?? _conversationState;
+        _messages.add({'from': 'bot', 'text': reply});
+        _loading = false;
       });
-    } catch (e) {
-      setState(() {
-        _messages.add({'from': 'bot', 'text': 'Error de chat: $e'});
-      });
-    } finally {
-      setState(() => _loading = false);
-    }
+    });
+  }
+
+  Widget _buildMessage(Map<String, String> m) {
+    final isUser = m['from'] == 'user';
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.all(14),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        decoration: BoxDecoration(
+          gradient: isUser ? kGreenGlow : null,
+          color: isUser ? null : kCardColor,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isUser ? 16 : 4),
+            bottomRight: Radius.circular(isUser ? 4 : 16),
+          ),
+          boxShadow: isUser ? kGreenShadow : kCardShadow,
+          border: Border.all(color: kBorderColor),
+        ),
+        child: Text(
+          m['text'] ?? '',
+          style: TextStyle(
+            color: isUser ? kCarbonBlack : kWhite,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_initialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    return Column(
-      children: [
-        // Header
-        Container(
-          padding: const EdgeInsets.all(12.0),
-          decoration: BoxDecoration(
-            color: Colors.green[50],
-            border: Border(
-              bottom: BorderSide(color: Colors.green[200]!, width: 1),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.chat_bubble, color: Colors.green[700]),
-              const SizedBox(width: 8),
-              Text(
-                'Asistente PlayZone',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[900],
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Suggestion chips
-        if (_messages.length <= 1)
+    return Container(
+      decoration: const BoxDecoration(gradient: kBgGradient),
+      child: Column(
+        children: [
+          // HEADER
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _suggestedQuestions.map((q) {
-                return ActionChip(
-                  label: Text(
-                    q,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.green[700],
-                  onPressed: () {
-                    _controller.text = q;
-                    _send();
-                  },
-                );
-              }).toList(),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: kSurfaceColor,
+              border: Border(bottom: BorderSide(color: kBorderColor)),
             ),
-          ),
-        // Messages list
-        Expanded(
-          child: _messages.isEmpty
-              ? const Center(
-                  child: Text('Iniciando chat...'),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: kGreenGlow,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.smart_toy, color: Colors.black),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Asistente PlayZone',
+                  style: TextStyle(
+                    color: kWhite,
+                    fontWeight: FontWeight.bold,
+                  ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final m = _messages[index];
-                   final isUser = m['from'] == 'user';
-                    return Align(
-                      alignment: isUser
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        padding: const EdgeInsets.all(12),
-                        constraints: BoxConstraints(
-                          maxWidth:
-                              MediaQuery.of(context).size.width * 0.75,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isUser
-                              ? Colors.green[100]
-                              : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          m['text'] ?? '',
-                          style: TextStyle(
-                            color: isUser ? Colors.green[900] : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-        // Loading indicator
-        if (_loading)
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: const LinearProgressIndicator(),
-          ),
-        // Input area
-        Container(
-          padding: const EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: Colors.grey[300]!, width: 1),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    hintText: 'Escribe tu mensaje...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  enabled: !_loading,
-                  onSubmitted: (_) => _send(),
-                ),
+
+          // SUGERENCIAS
+          if (_messages.length <= 1)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Wrap(
+                spacing: 8,
+                children: _suggested.map((q) {
+                  return ActionChip(
+                    label: Text(q, style: const TextStyle(color: kWhite)),
+                    backgroundColor: kDarkGray,
+                    side: BorderSide(color: kBorderColor),
+                    onPressed: () {
+                      _controller.text = q;
+                      _send();
+                    },
+                  );
+                }).toList(),
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _loading ? null : _send,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+            ),
+
+          // MENSAJES
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _messages.length,
+              itemBuilder: (_, i) => _buildMessage(_messages[i]),
+            ),
+          ),
+
+          // LOADING
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: LinearProgressIndicator(),
+            ),
+
+          // INPUT
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: kSurfaceColor,
+              border: Border(top: BorderSide(color: kBorderColor)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    style: const TextStyle(color: kWhite),
+                    decoration: InputDecoration(
+                      hintText: 'Escribe tu mensaje...',
+                      hintStyle: TextStyle(color: kLightGray),
+                      filled: true,
+                      fillColor: kDarkGray,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onSubmitted: (_) => _send(),
                   ),
                 ),
-                child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : const Text(
-                        'Enviar',
-                        style: TextStyle(color: Colors.white),
-                      ),
-              )
-            ],
-          ),
-        )
-      ],
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: kGreenGlow,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.black),
+                    onPressed: _send,
+                  ),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }

@@ -7,7 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 Future<void> main() async {
   await bootstrap();
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('es_CO', null); // ✅
+  await initializeDateFormatting('es_CO', null); 
   runApp(const PlayZoneApp());
 }
 
