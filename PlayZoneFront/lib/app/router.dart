@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:play_zone1/models/usuario.dart';
+import 'package:play_zone/models/usuario.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'register_page.dart';

@@ -1,13 +1,12 @@
 // lib/screens/admin_canchas_screen.dart
 import 'package:flutter/material.dart';
-import 'package:play_zone1/models/cancha.dart';
-import 'package:play_zone1/models/usuario.dart';
-import 'package:play_zone1/services/cancha_service.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/cancha.dart';
+import 'package:play_zone/models/usuario.dart';
+import 'package:play_zone/util/constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:play_zone1/widgets/tarifas_matrix_dialog.dart';
-import 'package:play_zone1/screens/reporte_cancha_screen.dart';
+import 'package:play_zone/widgets/tarifas_matrix_dialog.dart';
+import 'package:play_zone/screens/reporte_cancha_screen.dart';
 
 class AdminCanchasScreen extends StatelessWidget {
   final String search;
@@ -396,7 +395,6 @@ class _CrearCanchaDialogState extends State<_CrearCanchaDialog> {
   final _nombreController = TextEditingController();
   final _latController = TextEditingController();
   final _lngController = TextEditingController();
-  final _canchasService = CanchasService();
   bool _loading = false;
   String? _error;
 

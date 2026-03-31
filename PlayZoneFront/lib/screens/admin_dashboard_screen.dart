@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:play_zone1/models/cancha.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/cancha.dart';
+import 'package:play_zone/util/constants.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   final List<Canchas> canchas;

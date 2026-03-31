@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/util/constants.dart';
 import '../models/usuario.dart';
 import '../models/register_request.dart';
 import '../models/login_request.dart';

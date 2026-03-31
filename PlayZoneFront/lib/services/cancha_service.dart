@@ -1,5 +1,5 @@
 import 'package:http/http.dart' as http;
-import 'package:play_zone1/models/cancha.dart';
+import 'package:play_zone/models/cancha.dart';
 import 'dart:convert';
 import '../util/constants.dart';
 

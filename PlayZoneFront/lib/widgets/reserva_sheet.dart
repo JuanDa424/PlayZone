@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:play_zone1/screens/pago_web_screen.dart';
+import 'package:play_zone/screens/pago_web_screen.dart';
 import '../models/cancha.dart';
 import '../models/hora_disponible.dart';
 import '../services/pago_service.dart';

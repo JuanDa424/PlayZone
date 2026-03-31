@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:play_zone1/util/constants.dart';
-import 'package:play_zone1/widgets/playzone_chat_wrapper.dart';
+import 'package:play_zone/util/constants.dart';
+import 'package:play_zone/widgets/playzone_chat_wrapper.dart';
 import '../shared/brand.dart';
 
 class HomePage extends StatefulWidget {

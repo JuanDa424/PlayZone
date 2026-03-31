@@ -1,10 +1,10 @@
 // lib/widgets/tarifas_matrix_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:play_zone1/models/cancha.dart';
-import 'package:play_zone1/models/tarifa_horaria.dart';
-import 'package:play_zone1/services/tarifa_service.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/cancha.dart';
+import 'package:play_zone/models/tarifa_horaria.dart';
+import 'package:play_zone/services/tarifa_service.dart';
+import 'package:play_zone/util/constants.dart';
 
 class TarifasMatrixDialog extends StatefulWidget {
   final Canchas cancha;

@@ -1,5 +1,4 @@
 // lib/models/tarifa_horaria.dart
-import 'package:flutter/material.dart';
 
 class TarifaHoraria {
   final int? id;

@@ -1,11 +1,11 @@
 // lib/screens/admin_reservas_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:play_zone1/models/cancha.dart';
-import 'package:play_zone1/models/reserva_response.dart';
-import 'package:play_zone1/models/usuario.dart';
-import 'package:play_zone1/services/reserva_service.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/cancha.dart';
+import 'package:play_zone/models/reserva_response.dart';
+import 'package:play_zone/models/usuario.dart';
+import 'package:play_zone/services/reserva_service.dart';
+import 'package:play_zone/util/constants.dart';
 
 class AdminReservasScreen extends StatefulWidget {
   final String search;

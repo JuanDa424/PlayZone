@@ -1,8 +1,8 @@
 // lib/services/tarifa_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:play_zone1/models/tarifa_horaria.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/tarifa_horaria.dart';
+import 'package:play_zone/util/constants.dart';
 
 class TarifaService {
   // GET /tarifas/cancha/{canchaId}

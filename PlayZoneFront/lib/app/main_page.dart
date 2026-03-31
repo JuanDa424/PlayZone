@@ -1,12 +1,11 @@
 // lib/app/main_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:play_zone1/models/cancha.dart';
-import 'package:play_zone1/models/reserva_request.dart';
-import 'package:play_zone1/models/usuario.dart';
-import 'package:play_zone1/services/cancha_service.dart';
-import 'package:play_zone1/services/reserva_service.dart';
+import 'package:play_zone/models/cancha.dart';
+import 'package:play_zone/models/reserva_request.dart';
+import 'package:play_zone/models/usuario.dart';
+import 'package:play_zone/services/cancha_service.dart';
+import 'package:play_zone/services/reserva_service.dart';
 import '../util/constants.dart';
 import '../widgets/cancha_detalles.dart';
 import '../widgets/reserva_sheet.dart';
@@ -38,6 +37,7 @@ class _MainPageState extends State<MainPage> {
   bool _isLoading = true;
 
   // ── Selección temporal ────────────────────────────────────────
+  // ignore: unused_field
   int? _selectedCanchaId;
 
   @override

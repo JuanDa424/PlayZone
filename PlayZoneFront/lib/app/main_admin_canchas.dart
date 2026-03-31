@@ -1,14 +1,14 @@
 // lib/app/main_admin_canchas.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:play_zone1/models/usuario.dart';
-import 'package:play_zone1/models/cancha.dart';
-import 'package:play_zone1/services/cancha_service.dart';
-import 'package:play_zone1/screens/admin_dashboard_screen.dart';
-import 'package:play_zone1/screens/admin_canchas_screen.dart';
-import 'package:play_zone1/screens/admin_reservas_screen.dart';
-import 'package:play_zone1/screens/admin_config_screen.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/usuario.dart';
+import 'package:play_zone/models/cancha.dart';
+import 'package:play_zone/services/cancha_service.dart';
+import 'package:play_zone/screens/admin_dashboard_screen.dart';
+import 'package:play_zone/screens/admin_canchas_screen.dart';
+import 'package:play_zone/screens/admin_reservas_screen.dart';
+import 'package:play_zone/screens/admin_config_screen.dart';
+import 'package:play_zone/util/constants.dart';
 import 'package:go_router/go_router.dart';
 
 class PropietarioAdminPage extends StatefulWidget {

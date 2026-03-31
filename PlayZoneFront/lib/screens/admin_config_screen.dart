@@ -1,7 +1,7 @@
 // lib/screens/admin_config_screen.dart
 import 'package:flutter/material.dart';
-import 'package:play_zone1/models/usuario.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/usuario.dart';
+import 'package:play_zone/util/constants.dart';
 
 class AdminConfigScreen extends StatelessWidget {
   final Usuario usuario;

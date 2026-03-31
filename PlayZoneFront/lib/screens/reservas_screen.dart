@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:play_zone1/models/usuario.dart';
-import 'package:play_zone1/services/reserva_service.dart';
+import 'package:play_zone/models/usuario.dart';
+import 'package:play_zone/services/reserva_service.dart';
 import '../util/constants.dart';
 import '../models/reserva_response.dart';
 

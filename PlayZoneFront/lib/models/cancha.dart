@@ -1,6 +1,5 @@
 // FILE: lib/models/cancha.dart
 
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Canchas {
   final int? id;

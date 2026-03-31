@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:play_zone1/models/reserva_request.dart';
-import 'package:play_zone1/models/reserva_response.dart';
-import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone/models/reserva_request.dart';
+import 'package:play_zone/models/reserva_response.dart';
+import 'package:play_zone/util/constants.dart';
 
 class ReservaApiService {
 

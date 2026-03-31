@@ -30,9 +30,9 @@ class _LoginPageState extends State<LoginPage> {
 
   void _showSnackBar(String message, {bool isError = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      buildSnackBar(message, isError: isError),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(buildSnackBar(message, isError: isError));
   }
 
   Future<void> _handleLogin() async {
@@ -66,7 +66,9 @@ class _LoginPageState extends State<LoginPage> {
       } else if (msg.contains('Credenciales')) {
         _showSnackBar('Correo o contraseña incorrectos.');
       } else {
-        _showSnackBar('Algo esta mal, verifica correo y contraseña bien digitados o que hayas verificado tu correo de la cuenta');
+        _showSnackBar(
+          'Algo esta mal, verifica correo y contraseña bien digitados o que hayas verificado el correo de la cuenta',
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -86,48 +88,53 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 // ── Logo ─────────────────────────────────
                 Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: kGreenGlow,
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: kGreenShadow,
-                  ),
-                  child: const Icon(Icons.sports_soccer_rounded,
-                      color: Colors.black, size: 44),
-                )
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: kGreenGlow,
+                        borderRadius: BorderRadius.circular(22),
+                        boxShadow: kGreenShadow,
+                      ),
+                      child: const Icon(
+                        Icons.sports_soccer_rounded,
+                        color: Colors.black,
+                        size: 44,
+                      ),
+                    )
                     .animate()
                     .fadeIn(duration: 600.ms)
                     .scale(begin: const Offset(0.7, 0.7)),
 
                 const SizedBox(height: 20),
 
-                const Text('PlayZone',
-                    style: TextStyle(
-                      color: kWhite,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ))
+                const Text(
+                      'PlayZone',
+                      style: TextStyle(
+                        color: kWhite,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                    )
                     .animate()
                     .fadeIn(delay: 200.ms, duration: 500.ms)
                     .slideY(begin: 0.3),
 
                 const SizedBox(height: 6),
-                const Text('Inicia sesión para continuar',
-                    style: TextStyle(color: kLightGray, fontSize: 14))
-                    .animate()
-                    .fadeIn(delay: 300.ms),
+                const Text(
+                  'Inicia sesión para continuar',
+                  style: TextStyle(color: kLightGray, fontSize: 14),
+                ).animate().fadeIn(delay: 300.ms),
 
                 const SizedBox(height: 40),
 
                 // ── Email ─────────────────────────────────
                 _buildField(
-                  controller: _emailController,
-                  hint: 'Correo electrónico',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                )
+                      controller: _emailController,
+                      hint: 'Correo electrónico',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                    )
                     .animate()
                     .fadeIn(delay: 400.ms, duration: 400.ms)
                     .slideX(begin: -0.08),
@@ -136,22 +143,23 @@ class _LoginPageState extends State<LoginPage> {
 
                 // ── Password ──────────────────────────────
                 _buildField(
-                  controller: _passwordController,
-                  hint: 'Contraseña',
-                  icon: Icons.lock_outline_rounded,
-                  obscure: _obscurePassword,
-                  suffix: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
-                      color: kLightGray,
-                      size: 20,
-                    ),
-                    onPressed: () => setState(
-                        () => _obscurePassword = !_obscurePassword),
-                  ),
-                )
+                      controller: _passwordController,
+                      hint: 'Contraseña',
+                      icon: Icons.lock_outline_rounded,
+                      obscure: _obscurePassword,
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          color: kLightGray,
+                          size: 20,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                      ),
+                    )
                     .animate()
                     .fadeIn(delay: 500.ms, duration: 400.ms)
                     .slideX(begin: -0.08),
@@ -161,10 +169,13 @@ class _LoginPageState extends State<LoginPage> {
                   child: TextButton(
                     onPressed: () => context.go('/recuperar'),
                     style: TextButton.styleFrom(
-                        foregroundColor: kOrangeAccent,
-                        padding: EdgeInsets.zero),
-                    child: const Text('¿Olvidaste tu contraseña?',
-                        style: TextStyle(fontSize: 13)),
+                      foregroundColor: kOrangeAccent,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text(
+                      '¿Olvidaste tu contraseña?',
+                      style: TextStyle(fontSize: 13),
+                    ),
                   ),
                 ).animate().fadeIn(delay: 550.ms),
 
@@ -186,7 +197,8 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         elevation: 0,
                       ),
                       onPressed: _isLoading ? null : _handleLogin,
@@ -195,37 +207,44 @@ class _LoginPageState extends State<LoginPage> {
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2.5, color: Colors.black),
+                                strokeWidth: 2.5,
+                                color: Colors.black,
+                              ),
                             )
-                          : const Text('Ingresar',
+                          : const Text(
+                              'Ingresar',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.black)),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                            ),
                     ),
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 600.ms)
-                    .slideY(begin: 0.2),
+                ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
 
                 const SizedBox(height: 20),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('¿No tienes cuenta?',
-                        style:
-                            TextStyle(color: kLightGray, fontSize: 14)),
+                    const Text(
+                      '¿No tienes cuenta?',
+                      style: TextStyle(color: kLightGray, fontSize: 14),
+                    ),
                     TextButton(
                       onPressed: () => context.go('/registro'),
                       style: TextButton.styleFrom(
-                          foregroundColor: kGreenNeon,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 6)),
-                      child: const Text('Regístrate',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
+                        foregroundColor: kGreenNeon,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                      ),
+                      child: const Text(
+                        'Regístrate',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ],
                 ).animate().fadeIn(delay: 700.ms),
@@ -257,19 +276,22 @@ class _LoginPageState extends State<LoginPage> {
         suffixIcon: suffix,
         filled: true,
         fillColor: kDarkGray,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: kBorderColor, width: 1)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kBorderColor, width: 1),
+        ),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: kGreenNeon, width: 1.5)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kGreenNeon, width: 1.5),
+        ),
       ),
     );
   }

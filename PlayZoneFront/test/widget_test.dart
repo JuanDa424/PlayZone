@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:play_zone1/main.dart';
+import 'package:play_zone/main.dart';
 
 void main() {
   testWidgets('Login carga correctamente', (WidgetTester tester) async {
