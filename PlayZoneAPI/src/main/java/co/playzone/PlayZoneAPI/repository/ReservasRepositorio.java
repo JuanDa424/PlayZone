@@ -20,6 +20,9 @@ public interface ReservasRepositorio extends JpaRepository<Reservas, Long> {
 
 	// Obtener historial por Email
 	List<Reservas> findByUsuarioCorreo(String email);
+	
+	List<Reservas> findByCancha_Id(Long canchaId);
+
 
 	/**
 	 * Verifica si el horario está ocupado. Si una reserva existe pero está

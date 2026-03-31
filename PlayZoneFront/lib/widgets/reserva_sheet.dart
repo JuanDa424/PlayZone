@@ -71,6 +71,82 @@ class _ReservaSheetState extends State<ReservaSheet> {
     'Diciembre',
   ];
 
+  Future<bool> _mostrarAdvertenciaPago() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: kSurfaceColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              'Antes de continuar',
+              style: TextStyle(color: kWhite, fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_metodoPago == 'Efectivo') ...[
+                    const Text(
+                      '⚠️ Pago en efectivo',
+                      style: TextStyle(
+                        color: kOrangeAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Si reservas y no te presentas a la cancha:',
+                      style: TextStyle(color: kLightGray),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      '• Tu cuenta será desactivada temporalmente.\n'
+                      '• Si vuelve a ocurrir, la cuenta será desactivada permanentemente.',
+                      style: TextStyle(color: kLightGray),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  const Text(
+                    '📅 Política de cancelación',
+                    style: TextStyle(
+                      color: kGreenNeon,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Puedes cancelar tu reserva máximo hasta el día anterior.\n'
+                    'No se permiten cancelaciones el mismo día.',
+                    style: TextStyle(color: kLightGray),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(color: kLightGray),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kGreenNeon,
+                  foregroundColor: kCarbonBlack,
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Entendido'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   Future<void> _cargarDisponibilidad(DateTime fecha) async {
     setState(() {
       _loadingHoras = true;
@@ -122,6 +198,10 @@ class _ReservaSheetState extends State<ReservaSheet> {
   // ── Lógica principal al confirmar ────────────────────────────────────────
   Future<void> _handleConfirmar() async {
     if (!_puedeConfirmar) return;
+
+    // 👇 NUEVO: mostrar advertencia SIEMPRE
+    final acepto = await _mostrarAdvertenciaPago();
+    if (!acepto) return;
 
     if (_metodoPago == 'Efectivo') {
       widget.onConfirm(_fechaSeleccionada!, _horaSeleccionada!, _metodoPago!);
@@ -871,7 +951,6 @@ class _MetodoPagoTile extends StatelessWidget {
   }
 }
 
-
 class _ConfirmRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -891,9 +970,14 @@ class _ConfirmRow extends StatelessWidget {
         const SizedBox(width: 8),
         Text(label, style: const TextStyle(color: kLightGray, fontSize: 13)),
         const Spacer(),
-        Text(value,
-            style: const TextStyle(
-                color: kWhite, fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: kWhite,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }

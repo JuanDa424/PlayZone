@@ -6,8 +6,8 @@ import 'package:play_zone1/services/cancha_service.dart';
 import 'package:play_zone1/util/constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:play_zone1/util/constants.dart';
 import 'package:play_zone1/widgets/tarifas_matrix_dialog.dart';
+import 'package:play_zone1/screens/reporte_cancha_screen.dart';
 
 class AdminCanchasScreen extends StatelessWidget {
   final String search;
@@ -190,15 +190,18 @@ class AdminCanchasScreen extends StatelessWidget {
   }
 }
 
-// ── Tarjeta de cancha ─────────────────────────────────────────────────────
+// ── Tarjeta de cancha (RESPONSIVE) ───────────────────────────────────────
 class _CanchaCard extends StatelessWidget {
   final Canchas cancha;
   const _CanchaCard({required this.cancha});
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 700;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: kDarkGray,
         borderRadius: BorderRadius.circular(16),
@@ -208,94 +211,172 @@ class _CanchaCard extends StatelessWidget {
               : Colors.redAccent.withOpacity(0.15),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Row(
+      child: isMobile ? _mobileLayout(context) : _desktopLayout(context),
+    );
+  }
+
+  // 📱 MOBILE (columna)
+  Widget _mobileLayout(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          cancha.nombre,
+          style: const TextStyle(
+            color: kWhite,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 6),
+
+        Text(
+          'Lat: ${cancha.latitud.toStringAsFixed(5)} • Lng: ${cancha.longitud.toStringAsFixed(5)}',
+          style: const TextStyle(color: kLightGray, fontSize: 12),
+        ),
+
+        const SizedBox(height: 10),
+
+        _estadoBadge(),
+
+        const SizedBox(height: 12),
+
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            // Ícono
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: cancha.disponibilidad
-                    ? kGreenNeon.withOpacity(0.1)
-                    : Colors.redAccent.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.sports_soccer_rounded,
-                color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            // Nombre y coordenadas
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    cancha.nombre,
-                    style: const TextStyle(
-                        color: kWhite,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Lat: ${cancha.latitud.toStringAsFixed(5)} • Lng: ${cancha.longitud.toStringAsFixed(5)}',
-                    style: const TextStyle(color: kLightGray, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Badge estado
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: cancha.disponibilidad
-                    ? kGreenNeon.withOpacity(0.12)
-                    : Colors.redAccent.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                cancha.disponibilidad ? 'Activa' : 'Inactiva',
-                style: TextStyle(
-                  color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-
-            // ✅ Botón tarifas con ancho fijo
-            SizedBox(
-              height: 36,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.grid_view_rounded, size: 15),
-                label: const Text('Tarifas', style: TextStyle(fontSize: 13)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: kGreenNeon,
-                  side: const BorderSide(color: kGreenNeon, width: 1),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => TarifasMatrixDialog(cancha: cancha),
-                  );
-                },
-              ),
-            ),
+            _btnTarifas(context),
+            _btnReporte(context),
           ],
         ),
+      ],
+    );
+  }
+
+  // 💻 DESKTOP (fila original mejorada)
+  Widget _desktopLayout(BuildContext context) {
+    return Row(
+      children: [
+        // Ícono
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: cancha.disponibilidad
+                ? kGreenNeon.withOpacity(0.1)
+                : Colors.redAccent.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.sports_soccer_rounded,
+            color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 16),
+
+        // Nombre y coordenadas
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                cancha.nombre,
+                style: const TextStyle(
+                  color: kWhite,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Lat: ${cancha.latitud.toStringAsFixed(5)} • Lng: ${cancha.longitud.toStringAsFixed(5)}',
+                style: const TextStyle(color: kLightGray, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
+        _estadoBadge(),
+
+        const SizedBox(width: 8),
+
+        SizedBox(height: 36, child: _btnTarifas(context)),
+        const SizedBox(width: 8),
+        SizedBox(height: 36, child: _btnReporte(context)),
+      ],
+    );
+  }
+
+  // Badge estado
+  Widget _estadoBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: cancha.disponibilidad
+            ? kGreenNeon.withOpacity(0.12)
+            : Colors.redAccent.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
       ),
+      child: Text(
+        cancha.disponibilidad ? 'Activa' : 'Inactiva',
+        style: TextStyle(
+          color: cancha.disponibilidad ? kGreenNeon : Colors.redAccent,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  // Botón tarifas
+  Widget _btnTarifas(BuildContext context) {
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.grid_view_rounded, size: 15),
+      label: const Text('Tarifas', style: TextStyle(fontSize: 13)),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: kGreenNeon,
+        side: const BorderSide(color: kGreenNeon, width: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (_) => TarifasMatrixDialog(cancha: cancha),
+        );
+      },
+    );
+  }
+
+  // Botón reporte
+  Widget _btnReporte(BuildContext context) {
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.bar_chart_rounded, size: 15),
+      label: const Text('Reporte', style: TextStyle(fontSize: 13)),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: kOrangeAccent,
+        side: const BorderSide(color: kOrangeAccent, width: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ReporteCanchaScreen(
+              canchaId: cancha.id!,
+              nombreCancha: cancha.nombre,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -328,54 +409,54 @@ class _CrearCanchaDialogState extends State<_CrearCanchaDialog> {
   }
 
   Future<void> _crear() async {
-  final nombre = _nombreController.text.trim();
-  final latStr = _latController.text.trim();
-  final lngStr = _lngController.text.trim();
+    final nombre = _nombreController.text.trim();
+    final latStr = _latController.text.trim();
+    final lngStr = _lngController.text.trim();
 
-  if (nombre.isEmpty || latStr.isEmpty || lngStr.isEmpty) {
-    setState(() => _error = 'Todos los campos son obligatorios.');
-    return;
-  }
-  final lat = double.tryParse(latStr);
-  final lng = double.tryParse(lngStr);
-  if (lat == null || lng == null) {
-    setState(() => _error = 'Latitud y longitud deben ser números válidos.');
-    return;
-  }
+    if (nombre.isEmpty || latStr.isEmpty || lngStr.isEmpty) {
+      setState(() => _error = 'Todos los campos son obligatorios.');
+      return;
+    }
+    final lat = double.tryParse(latStr);
+    final lng = double.tryParse(lngStr);
+    if (lat == null || lng == null) {
+      setState(() => _error = 'Latitud y longitud deben ser números válidos.');
+      return;
+    }
 
-  setState(() {
-    _loading = true;
-    _error = null;
-  });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
-  try {
-    final response = await http.post(
-      Uri.parse('$baseUrl/canchas'),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({
-        'nombre': nombre,
-        'latitud': lat,
-        'longitud': lng,
-        'disponibilidad': true,
-        'propietarioId': widget.usuarioId,
-      }),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      widget.onCreada();
-      if (mounted) Navigator.of(context).pop();
-    } else {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/canchas'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          'nombre': nombre,
+          'latitud': lat,
+          'longitud': lng,
+          'disponibilidad': true,
+          'propietarioId': widget.usuarioId,
+        }),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        widget.onCreada();
+        if (mounted) Navigator.of(context).pop();
+      } else {
+        setState(() {
+          _error = 'Error del servidor: ${response.statusCode}';
+          _loading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _error = 'Error del servidor: ${response.statusCode}';
+        _error = 'Error de conexión. Intenta de nuevo.';
         _loading = false;
       });
     }
-  } catch (e) {
-    setState(() {
-      _error = 'Error de conexión. Intenta de nuevo.';
-      _loading = false;
-    });
   }
-}
 
   @override
   Widget build(BuildContext context) {

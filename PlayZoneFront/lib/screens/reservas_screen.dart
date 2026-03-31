@@ -26,17 +26,25 @@ class _ReservasScreenState extends State<ReservasScreen>
   late AnimationController _refreshCtrl;
 
   final List<String> _estados = [
-    'TODOS', 'RESERVADO', 'CANCELADA', 'FINALIZADA',
+    'TODOS',
+    'RESERVADO',
+    'CANCELADA',
+    'FINALIZADA',
   ];
 
   final currencyFormat = NumberFormat.currency(
-      locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+    locale: 'es_CO',
+    symbol: '\$',
+    decimalDigits: 0,
+  );
 
   @override
   void initState() {
     super.initState();
     _refreshCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     _cargarDatos();
   }
 
@@ -48,13 +56,23 @@ class _ReservasScreenState extends State<ReservasScreen>
 
   Future<void> _cargarDatos() async {
     _refreshCtrl.forward(from: 0);
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final reservas =
-          await _apiService.fetchReservasUsuario(widget.usuario.id);
-      setState(() { _reservas = reservas; _loading = false; });
+      final reservas = await _apiService.fetchReservasUsuario(
+        widget.usuario.id,
+      );
+      setState(() {
+        _reservas = reservas;
+        _loading = false;
+      });
     } catch (e) {
-      setState(() { _error = e.toString(); _loading = false; });
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -64,19 +82,27 @@ class _ReservasScreenState extends State<ReservasScreen>
 
   Color _colorEstado(String estado) {
     switch (estado.toUpperCase()) {
-      case 'RESERVADO': return kGreenNeon;
-      case 'CANCELADA': return Colors.redAccent;
-      case 'FINALIZADA': return kLightGray;
-      default: return kOrangeAccent;
+      case 'RESERVADO':
+        return kGreenNeon;
+      case 'CANCELADA':
+        return Colors.redAccent;
+      case 'FINALIZADA':
+        return kLightGray;
+      default:
+        return kOrangeAccent;
     }
   }
 
   IconData _iconEstado(String estado) {
     switch (estado.toUpperCase()) {
-      case 'RESERVADO': return Icons.check_circle_rounded;
-      case 'CANCELADA': return Icons.cancel_rounded;
-      case 'FINALIZADA': return Icons.task_alt_rounded;
-      default: return Icons.hourglass_empty_rounded;
+      case 'RESERVADO':
+        return Icons.check_circle_rounded;
+      case 'CANCELADA':
+        return Icons.cancel_rounded;
+      case 'FINALIZADA':
+        return Icons.task_alt_rounded;
+      default:
+        return Icons.hourglass_empty_rounded;
     }
   }
 
@@ -85,11 +111,11 @@ class _ReservasScreenState extends State<ReservasScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: kSurfaceColor,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-        title: const Text('¿Cancelar reserva?',
-            style: TextStyle(
-                color: kWhite, fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          '¿Cancelar reserva?',
+          style: TextStyle(color: kWhite, fontWeight: FontWeight.bold),
+        ),
         content: const Text(
           'La reserva aparecerá como cancelada y otros podrán tomar el turno.',
           style: TextStyle(color: kLightGray),
@@ -97,15 +123,15 @@ class _ReservasScreenState extends State<ReservasScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Volver',
-                style: TextStyle(color: kLightGray)),
+            child: const Text('Volver', style: TextStyle(color: kLightGray)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: kWhite,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Sí, cancelar'),
@@ -146,24 +172,30 @@ class _ReservasScreenState extends State<ReservasScreen>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Mis Reservas',
-                            style: TextStyle(
-                              color: kWhite,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            )),
+                        const Text(
+                          'Mis Reservas',
+                          style: TextStyle(
+                            color: kWhite,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Text(
                           '${_reservasFiltradas.length} reserva${_reservasFiltradas.length != 1 ? 's' : ''}',
                           style: const TextStyle(
-                              color: kLightGray, fontSize: 13),
+                            color: kLightGray,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
                     RotationTransition(
                       turns: _refreshCtrl,
                       child: IconButton(
-                        icon: const Icon(Icons.refresh_rounded,
-                            color: kGreenNeon),
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          color: kGreenNeon,
+                        ),
                         onPressed: _cargarDatos,
                         tooltip: 'Actualizar',
                       ),
@@ -189,21 +221,20 @@ class _ReservasScreenState extends State<ReservasScreen>
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _filtroEstado = estado),
+                          onTap: () => setState(() => _filtroEstado = estado),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: selected
                                   ? color.withOpacity(0.15)
                                   : kDarkGray,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: selected
-                                    ? color
-                                    : Colors.transparent,
+                                color: selected ? color : Colors.transparent,
                                 width: 1.2,
                               ),
                             ),
@@ -211,7 +242,7 @@ class _ReservasScreenState extends State<ReservasScreen>
                               estado == 'TODOS'
                                   ? 'Todos'
                                   : estado[0] +
-                                      estado.substring(1).toLowerCase(),
+                                        estado.substring(1).toLowerCase(),
                               style: TextStyle(
                                 color: selected ? color : kLightGray,
                                 fontWeight: selected
@@ -239,9 +270,10 @@ class _ReservasScreenState extends State<ReservasScreen>
                     child: Row(
                       children: [
                         _KpiChip(
-                            label: 'Total',
-                            value: _reservas.length.toString(),
-                            color: kWhite),
+                          label: 'Total',
+                          value: _reservas.length.toString(),
+                          color: kWhite,
+                        ),
                         const SizedBox(width: 10),
                         _KpiChip(
                           label: 'Activas',
@@ -265,7 +297,11 @@ class _ReservasScreenState extends State<ReservasScreen>
                           label: 'Gastado',
                           value: currencyFormat.format(
                             _reservas
-                                .where((r) => r.estado != 'CANCELADA')
+                                .where(
+                                  (r) =>
+                                      r.estado == 'RESERVADO' ||
+                                      r.estado == 'FINALIZADO',
+                                )
                                 .fold(0.0, (s, r) => s + r.totalPago),
                           ),
                           color: kOrangeAccent,
@@ -294,8 +330,10 @@ class _ReservasScreenState extends State<ReservasScreen>
           children: [
             const CircularProgressIndicator(color: kGreenNeon),
             const SizedBox(height: 16),
-            const Text('Cargando reservas...',
-                style: TextStyle(color: kLightGray, fontSize: 13)),
+            const Text(
+              'Cargando reservas...',
+              style: TextStyle(color: kLightGray, fontSize: 13),
+            ),
           ],
         ),
       );
@@ -306,18 +344,24 @@ class _ReservasScreenState extends State<ReservasScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.wifi_off_rounded,
-                color: Colors.redAccent, size: 48),
+            const Icon(
+              Icons.wifi_off_rounded,
+              color: Colors.redAccent,
+              size: 48,
+            ),
             const SizedBox(height: 12),
-            const Text('No se pudieron cargar las reservas',
-                style: TextStyle(color: kLightGray)),
+            const Text(
+              'No se pudieron cargar las reservas',
+              style: TextStyle(color: kLightGray),
+            ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Reintentar'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: kGreenNeon,
-                  foregroundColor: Colors.black),
+                backgroundColor: kGreenNeon,
+                foregroundColor: Colors.black,
+              ),
               onPressed: _cargarDatos,
             ),
           ],
@@ -330,28 +374,35 @@ class _ReservasScreenState extends State<ReservasScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_month_rounded,
-                color: kLightGray.withOpacity(0.25), size: 72)
+            Icon(
+                  Icons.calendar_month_rounded,
+                  color: kLightGray.withOpacity(0.25),
+                  size: 72,
+                )
                 .animate(onPlay: (c) => c.repeat(reverse: true))
                 .scaleXY(
-                    begin: 0.95,
-                    end: 1.05,
-                    duration: 2000.ms,
-                    curve: Curves.easeInOut),
+                  begin: 0.95,
+                  end: 1.05,
+                  duration: 2000.ms,
+                  curve: Curves.easeInOut,
+                ),
             const SizedBox(height: 16),
             Text(
               _reservas.isEmpty
                   ? 'No tienes reservas aún'
                   : 'No hay reservas con este filtro',
               style: const TextStyle(
-                  color: kLightGray,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500),
+                color: kLightGray,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             if (_reservas.isEmpty) ...[
               const SizedBox(height: 6),
-              const Text('¡Reserva una cancha y empieza a jugar!',
-                  style: TextStyle(color: kLightGray, fontSize: 13)),
+              const Text(
+                '¡Reserva una cancha y empieza a jugar!',
+                style: TextStyle(color: kLightGray, fontSize: 13),
+              ),
             ],
           ],
         ),
@@ -410,133 +461,156 @@ class _ReservaCard extends StatelessWidget {
     final fecha = DateFormat('dd MMM yyyy').format(reserva.fecha);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: kCardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorEstado.withOpacity(0.18), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: colorEstado.withOpacity(0.06),
-            blurRadius: 16,
-            spreadRadius: -2,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            // ── Ícono estado ──────────────────────────
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: colorEstado.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: colorEstado.withOpacity(0.2)),
-              ),
-              child: Icon(iconEstado, color: colorEstado, size: 22),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: kCardColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: colorEstado.withOpacity(0.18),
+              width: 1.2,
             ),
-            const SizedBox(width: 14),
-
-            // ── Info ──────────────────────────────────
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    reserva.canchaNombre,
-                    style: const TextStyle(
-                        color: kWhite,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            boxShadow: [
+              BoxShadow(
+                color: colorEstado.withOpacity(0.06),
+                blurRadius: 16,
+                spreadRadius: -2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // ── Ícono estado ──────────────────────────
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: colorEstado.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colorEstado.withOpacity(0.2)),
                   ),
-                  const SizedBox(height: 5),
-                  Row(
+                  child: Icon(iconEstado, color: colorEstado, size: 22),
+                ),
+                const SizedBox(width: 14),
+
+                // ── Info ──────────────────────────────────
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.calendar_today_rounded,
-                          size: 11,
-                          color: kLightGray.withOpacity(0.6)),
-                      const SizedBox(width: 4),
-                      Text(fecha,
-                          style: TextStyle(
+                      Text(
+                        reserva.canchaNombre,
+                        style: const TextStyle(
+                          color: kWhite,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 11,
+                            color: kLightGray.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            fecha,
+                            style: TextStyle(
                               color: kLightGray.withOpacity(0.8),
-                              fontSize: 12)),
-                      const SizedBox(width: 10),
-                      Icon(Icons.access_time_rounded,
-                          size: 11,
-                          color: kLightGray.withOpacity(0.6)),
-                      const SizedBox(width: 4),
-                      Text('$hora – $horaFin',
-                          style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 11,
+                            color: kLightGray.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$hora – $horaFin',
+                            style: TextStyle(
                               color: kLightGray.withOpacity(0.8),
-                              fontSize: 12)),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-
-            // ── Precio + acción ───────────────────────
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  currencyFormat.format(reserva.totalPago),
-                  style: const TextStyle(
-                      color: kWhite,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
                 ),
-                const SizedBox(height: 6),
-                if (onCancelar != null)
-                  GestureDetector(
-                    onTap: onCancelar,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: Colors.redAccent.withOpacity(0.3)),
+                const SizedBox(width: 10),
+
+                // ── Precio + acción ───────────────────────
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      currencyFormat.format(reserva.totalPago),
+                      style: const TextStyle(
+                        color: kWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
-                      child: const Text('Cancelar',
-                          style: TextStyle(
+                    ),
+                    const SizedBox(height: 6),
+                    if (onCancelar != null)
+                      GestureDetector(
+                        onTap: onCancelar,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.redAccent.withOpacity(0.3),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(
                               color: Colors.redAccent,
                               fontSize: 11,
-                              fontWeight: FontWeight.bold)),
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: colorEstado.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      reserva.estado[0] +
-                          reserva.estado.substring(1).toLowerCase(),
-                      style: TextStyle(
-                          color: colorEstado,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorEstado.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          reserva.estado[0] +
+                              reserva.estado.substring(1).toLowerCase(),
+                          style: TextStyle(
+                            color: colorEstado,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate()
         .fadeIn(delay: (index * 70).ms, duration: 350.ms)
         .slideY(begin: 0.12);
@@ -574,14 +648,16 @@ class _KpiChip extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value,
-              style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16)),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(color: kLightGray, fontSize: 11)),
+          Text(label, style: const TextStyle(color: kLightGray, fontSize: 11)),
         ],
       ),
     );

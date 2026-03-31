@@ -7,17 +7,19 @@ import 'package:flutter/material.dart';
 //const String baseUrlTarifas = 'http://10.5.19.142:8080/tarifas';
 //const String baseUrlReserva = '$baseUrl/reservas';
 
-// ──DESPLIEGUE PRODUCCION ──────────────────────────────────────────────────────────────────
-//MOVIL
-const String baseUrl = 'https://playzone-production.up.railway.app/api';
-const String baseUrlTarifas =
-    'https://playzone-production.up.railway.app/tarifas';
+//WEB
+const String baseUrl = 'http://localhost:8080/api';
+const String baseUrlTarifas = 'http://localhost:8080/tarifas';
 const String baseUrlReserva = '$baseUrl/reservas';
 
-//WEB
-//const String baseUrl = 'http://localhost:8080/api';
-//const String baseUrlTarifas = 'http://localhost:8080/tarifas';
+// ──DESPLIEGUE PRODUCCION ──────────────────────────────────────────────────────────────────
+//MOVIL
+//const String baseUrl = 'https://playzone-production.up.railway.app/api';
+//const String baseUrlTarifas =
+   // 'https://playzone-production.up.railway.app/tarifas';
 //const String baseUrlReserva = '$baseUrl/reservas';
+
+
 
 // ── Colores base ──────────────────────────────────────────────────────────
 const kGreenNeon = Color(0xFF00FF85);

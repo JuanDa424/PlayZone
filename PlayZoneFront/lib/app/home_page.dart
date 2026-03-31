@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:play_zone1/util/constants.dart';
+import 'package:play_zone1/widgets/playzone_chat_wrapper.dart';
 import '../shared/brand.dart';
 
 class HomePage extends StatefulWidget {
@@ -45,6 +47,34 @@ class _HomePageState extends State<HomePage>
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: kGreenNeon,
+        elevation: 10,
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            backgroundColor: const Color(
+              0xFF1A1A1A,
+            ), // o kSurfaceColor si lo tienes aquí
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            builder: (_) => DraggableScrollableSheet(
+              initialChildSize: 0.75,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (_, scrollController) => const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: PlayZoneChatWrapper(),
+              ),
+            ),
+          );
+        },
+        child: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
+      ),
       body: Stack(
         children: [
           // Fondo de pantalla optimizado

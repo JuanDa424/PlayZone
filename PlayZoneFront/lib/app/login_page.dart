@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
       } else if (msg.contains('Credenciales')) {
         _showSnackBar('Correo o contraseña incorrectos.');
       } else {
-        _showSnackBar('Error: $msg');
+        _showSnackBar('Algo esta mal, verifica correo y contraseña bien digitados o que hayas verificado tu correo de la cuenta');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

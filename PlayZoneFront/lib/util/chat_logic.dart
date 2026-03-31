@@ -6,7 +6,7 @@ class ChatLogic {
 
     // registro
     RegExp(r'registr|crear cuenta', caseSensitive: false):
-        'Puedes registrarte desde la pantalla inicial completando tus datos básicos como nombre, correo y contraseña.',
+        'Puedes registrarte desde la pantalla inicial completando tus datos básicos como nombre, correo y contraseña y luego confirmando tu correo con un código.',
 
     // login
     RegExp(r'login|iniciar sesi[oó]n', caseSensitive: false):
@@ -14,7 +14,7 @@ class ChatLogic {
 
     // buscar
     RegExp(r'buscar|cancha|encontrar', caseSensitive: false):
-        'Puedes buscar canchas usando filtros como ubicación, fecha, horario y número de jugadores.',
+        'Puedes buscar canchas desde la pagina principal de la app o "Inicio".',
 
     // reservar
     RegExp(r'reserv', caseSensitive: false):
@@ -22,7 +22,7 @@ class ChatLogic {
 
     // pago
     RegExp(r'pago|pagar|mercado pago', caseSensitive: false):
-        'El pago se realiza mediante Mercado Pago de forma segura dentro de la app.',
+        'El pago se realiza mediante Mercado Pago de forma segura dentro de la app o en efectivo en la sede teniendo en cuenta las políticas de pago en efectivo.',
 
     // precio
     RegExp(r'precio|costo|vale', caseSensitive: false):
@@ -30,11 +30,11 @@ class ChatLogic {
 
     // cancelar
     RegExp(r'cancelar|eliminar reserva', caseSensitive: false):
-        'Puedes cancelar tu reserva desde la sección "Mis reservas" en tu perfil.',
+        'Puedes cancelar tu reserva desde la sección "Reservas" en tu perfil., puedes realizarlo como máximo el dia anterior',
 
     // reservas
     RegExp(r'mis reservas|ver reservas', caseSensitive: false):
-        'Puedes ver todas tus reservas activas en la sección "Mis reservas" dentro de tu perfil.',
+        'Puedes ver todas tus reservas activas en la sección "Reservas" dentro de tu perfil.',
 
     // perfil
     RegExp(r'perfil|cuenta', caseSensitive: false):
@@ -57,7 +57,7 @@ class ChatLogic {
         'Si necesitas ayuda adicional puedes contactar soporte desde la app o escribirnos directamente.',
 
     // app
-    RegExp(r'que hace|para que sirve', caseSensitive: false):
+    RegExp(r'que hace|para que sirve|que es', caseSensitive: false):
         'PlayZone te permite buscar, reservar y pagar canchas deportivas de forma rápida y sencilla.',
 
     // fallback

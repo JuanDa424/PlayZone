@@ -62,11 +62,14 @@ class _MainPageState extends State<MainPage> {
   // ── Filtro reactivo ───────────────────────────────────────────
   List<Canchas> get filteredCanchas {
     return _allCanchas.where((cancha) {
-      final matchesSearch = _searchText.isEmpty ||
+      final matchesSearch =
+          _searchText.isEmpty ||
           cancha.nombre.toLowerCase().contains(_searchText.toLowerCase());
-      final matchesDisponibilidad = _selectedDisponibilidad == 'Todos' ||
+      final matchesDisponibilidad =
+          _selectedDisponibilidad == 'Todos' ||
           (_selectedDisponibilidad == 'Disponible' && cancha.disponibilidad) ||
-          (_selectedDisponibilidad == 'No disponible' && !cancha.disponibilidad);
+          (_selectedDisponibilidad == 'No disponible' &&
+              !cancha.disponibilidad);
       return matchesSearch && matchesDisponibilidad;
     }).toList();
   }
@@ -130,7 +133,11 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Future<void> _procesarReserva(Canchas cancha, DateTime fecha, String hora) async {
+  Future<void> _procesarReserva(
+    Canchas cancha,
+    DateTime fecha,
+    String hora,
+  ) async {
     final reservaDto = ReservaRequest(
       usuarioId: widget.usuario.id,
       canchaId: cancha.id!,
@@ -143,23 +150,30 @@ class _MainPageState extends State<MainPage> {
       _showReservaSuccess();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          buildSnackBar('Error: $e', isError: true),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(buildSnackBar('Error: $e', isError: true));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showPasarelaPago(Canchas cancha, String metodoPago, DateTime fecha, String hora) {
+  void _showPasarelaPago(
+    Canchas cancha,
+    String metodoPago,
+    DateTime fecha,
+    String hora,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: kSurfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Pasarela de pago',
-            style: TextStyle(color: kWhite, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Pasarela de pago',
+          style: TextStyle(color: kWhite, fontWeight: FontWeight.bold),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -169,7 +183,9 @@ class _MainPageState extends State<MainPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: kOrangeAccent,
               foregroundColor: kWhite,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () {
               Navigator.pop(context);
@@ -199,12 +215,21 @@ class _MainPageState extends State<MainPage> {
                 shape: BoxShape.circle,
                 border: Border.all(color: kGreenNeon, width: 2),
               ),
-              child: const Icon(Icons.check_rounded, color: kGreenNeon, size: 38),
+              child: const Icon(
+                Icons.check_rounded,
+                color: kGreenNeon,
+                size: 38,
+              ),
             ),
             const SizedBox(height: 16),
-            const Text('¡Reserva confirmada!',
-                style: TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold, color: kWhite)),
+            const Text(
+              '¡Reserva confirmada!',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: kWhite,
+              ),
+            ),
             const SizedBox(height: 8),
             const Text(
               'Recibirás una notificación con los detalles.',
@@ -221,11 +246,14 @@ class _MainPageState extends State<MainPage> {
                 backgroundColor: kGreenNeon,
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () => Navigator.pop(context),
-              child: const Text('Perfecto',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Perfecto',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
@@ -254,7 +282,10 @@ class _MainPageState extends State<MainPage> {
             hintStyle: const TextStyle(color: kLightGray, fontSize: 14),
             filled: true,
             fillColor: kDarkGray,
-            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 0,
+              horizontal: 16,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(20),
               borderSide: BorderSide.none,
@@ -263,7 +294,11 @@ class _MainPageState extends State<MainPage> {
               borderRadius: BorderRadius.circular(20),
               borderSide: const BorderSide(color: kGreenNeon, width: 1.5),
             ),
-            prefixIcon: const Icon(Icons.search_rounded, color: kLightGray, size: 18),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: kLightGray,
+              size: 18,
+            ),
           ),
           style: const TextStyle(color: kWhite, fontSize: 14),
           onChanged: (value) => setState(() => _searchText = value),
@@ -271,7 +306,10 @@ class _MainPageState extends State<MainPage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.chat_bubble_outline_rounded, color: kLightGray),
+          icon: const Icon(
+            Icons.chat_bubble_outline_rounded,
+            color: kLightGray,
+          ),
           tooltip: 'Asistente',
           onPressed: () {
             showModalBottomSheet(
@@ -326,8 +364,10 @@ class _MainPageState extends State<MainPage> {
           children: [
             const CircularProgressIndicator(color: kGreenNeon),
             const SizedBox(height: 16),
-            const Text('Cargando canchas...',
-                style: TextStyle(color: kLightGray, fontSize: 13)),
+            const Text(
+              'Cargando canchas...',
+              style: TextStyle(color: kLightGray, fontSize: 13),
+            ),
           ],
         ),
       );
@@ -405,10 +445,7 @@ class _MainPageState extends State<MainPage> {
         duration: const Duration(milliseconds: 250),
         transitionBuilder: (child, animation) =>
             FadeTransition(opacity: animation, child: child),
-        child: KeyedSubtree(
-          key: ValueKey(_selectedIndex),
-          child: _buildBody(),
-        ),
+        child: KeyedSubtree(key: ValueKey(_selectedIndex), child: _buildBody()),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -442,9 +479,13 @@ class _NavButtonState extends State<_NavButton>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 150));
-    _scale = Tween<double>(begin: 1.0, end: 0.85)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.85,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -457,7 +498,10 @@ class _NavButtonState extends State<_NavButton>
   Widget build(BuildContext context) {
     return GestureDetector(
       onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) { _ctrl.reverse(); widget.onTap(); },
+      onTapUp: (_) {
+        _ctrl.reverse();
+        widget.onTap();
+      },
       onTapCancel: () => _ctrl.reverse(),
       child: ScaleTransition(
         scale: _scale,
