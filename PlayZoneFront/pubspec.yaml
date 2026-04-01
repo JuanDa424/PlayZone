@@ -22,6 +22,7 @@ dependencies:
   flutter_animate: ^4.5.0
   pdf: ^3.10.8
   printing: ^5.12.0
+  geocoding: ^2.1.1
 
 
 

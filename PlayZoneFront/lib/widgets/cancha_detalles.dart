@@ -6,6 +6,7 @@ import '../models/cancha.dart';
 import '../models/tarifa_horaria.dart';
 import '../util/constants.dart';
 import 'package:intl/intl.dart';
+import 'package:geocoding/geocoding.dart';
 
 class CanchaDetalles extends StatefulWidget {
   final Canchas cancha;
@@ -24,6 +25,7 @@ class CanchaDetalles extends StatefulWidget {
 class _CanchaDetallesState extends State<CanchaDetalles> {
   List<TarifaHoraria> _tarifas = [];
   bool _loadingTarifas = true;
+  String _direccion = 'Cargando dirección...';
 
   final currencyFormat = NumberFormat.currency(
     locale: 'es_CO',
@@ -35,13 +37,66 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
   void initState() {
     super.initState();
     _cargarTarifas();
+    _obtenerDireccion();
+  }
+
+  Future<void> _obtenerDireccion() async {
+    try {
+      final lat = widget.cancha.latitud;
+      final lng = widget.cancha.longitud;
+
+      print('📍 COORDS: $lat, $lng');
+
+      final url =
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=TU_API_KEY';
+
+      print('🌐 URL: $url');
+
+      final response = await http.get(Uri.parse(url));
+
+      print('📡 STATUS: ${response.statusCode}');
+      print('📦 BODY: ${response.body}');
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['results'] != null && data['results'].isNotEmpty) {
+          final direccion = data['results'][0]['formatted_address'];
+
+          setState(() {
+            _direccion = direccion;
+          });
+        } else {
+          print('⚠️ SIN RESULTADOS');
+          setState(() {
+            _direccion = 'Dirección no encontrada';
+          });
+        }
+      } else {
+        print('❌ ERROR HTTP');
+        setState(() {
+          _direccion = 'Error HTTP ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      print('💥 ERROR GENERAL: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _direccion =
+            'Lat: ${widget.cancha.latitud.toStringAsFixed(4)}, '
+            'Lng: ${widget.cancha.longitud.toStringAsFixed(4)}';
+      });
+    }
   }
 
   Future<void> _cargarTarifas() async {
     try {
       final response = await http.get(
-        Uri.parse(
-            'http://localhost:8080/tarifas/cancha/${widget.cancha.id}'),
+        Uri.parse('$baseUrlTarifas/cancha/${widget.cancha.id}'),
       );
       if (response.statusCode == 200) {
         final List json = jsonDecode(response.body);
@@ -126,10 +181,39 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 6),
+
+                    // 📍 DIRECCIÓN + BARRIO + CIUDAD
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 14,
+                          color: kLightGray,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            _direccion,
+                            style: const TextStyle(
+                              color: kLightGray,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Estado
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: widget.cancha.disponibilidad
                             ? kGreenNeon.withOpacity(0.12)
@@ -181,8 +265,11 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.payments_rounded,
-                    color: kOrangeAccent, size: 22),
+                const Icon(
+                  Icons.payments_rounded,
+                  color: kOrangeAccent,
+                  size: 22,
+                ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +284,9 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: kGreenNeon),
+                              strokeWidth: 2,
+                              color: kGreenNeon,
+                            ),
                           )
                         : Text(
                             _rangoPrecio,
@@ -214,7 +303,7 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
           ),
           const SizedBox(height: 12),
 
-          // ── Horarios disponibles (preview) ───────────
+          // ── Horarios disponibles ─────────────────────
           if (!_loadingTarifas && _tarifas.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.all(16),
@@ -228,13 +317,11 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.schedule_rounded,
-                          color: kGreenNeon, size: 18),
+                      Icon(Icons.schedule_rounded, color: kGreenNeon, size: 18),
                       SizedBox(width: 8),
                       Text(
                         'Horarios con tarifa configurada',
-                        style:
-                            TextStyle(color: kLightGray, fontSize: 12),
+                        style: TextStyle(color: kLightGray, fontSize: 12),
                       ),
                     ],
                   ),
@@ -245,31 +332,27 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
                     children: _tarifas.take(8).map((t) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: kGreenNeon.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                              color: kGreenNeon.withOpacity(0.2)),
+                            color: kGreenNeon.withOpacity(0.2),
+                          ),
                         ),
                         child: Text(
                           t.horaInicio.substring(0, 5),
                           style: const TextStyle(
-                              color: kGreenNeon,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold),
+                            color: kGreenNeon,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       );
                     }).toList(),
                   ),
-                  if (_tarifas.length > 8) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      '+${_tarifas.length - 8} horarios más disponibles al reservar',
-                      style: const TextStyle(
-                          color: kLightGray, fontSize: 11),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -282,19 +365,20 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
             decoration: BoxDecoration(
               color: kOrangeAccent.withOpacity(0.08),
               borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: kOrangeAccent.withOpacity(0.2)),
+              border: Border.all(color: kOrangeAccent.withOpacity(0.2)),
             ),
             child: const Row(
               children: [
-                Icon(Icons.info_outline_rounded,
-                    color: kOrangeAccent, size: 16),
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: kOrangeAccent,
+                  size: 16,
+                ),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Al reservar verás la disponibilidad exacta por día y hora.',
-                    style: TextStyle(
-                        color: kLightGray, fontSize: 12),
+                    style: TextStyle(color: kLightGray, fontSize: 12),
                   ),
                 ),
               ],
@@ -313,7 +397,8 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
                     : kDarkGray,
                 foregroundColor: kCarbonBlack,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 elevation: 0,
               ),
               icon: Icon(
@@ -321,9 +406,7 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
                     ? Icons.calendar_month_rounded
                     : Icons.block_rounded,
                 size: 20,
-                color: widget.cancha.disponibilidad
-                    ? kCarbonBlack
-                    : kLightGray,
+                color: widget.cancha.disponibilidad ? kCarbonBlack : kLightGray,
               ),
               label: Text(
                 widget.cancha.disponibilidad
@@ -337,8 +420,9 @@ class _CanchaDetallesState extends State<CanchaDetalles> {
                       : kLightGray,
                 ),
               ),
-              onPressed:
-                  widget.cancha.disponibilidad ? widget.onReservar : null,
+              onPressed: widget.cancha.disponibilidad
+                  ? widget.onReservar
+                  : null,
             ),
           ),
         ],

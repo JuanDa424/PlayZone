@@ -8,14 +8,14 @@ import 'package:flutter/material.dart';
 //const String baseUrlReserva = '$baseUrl/reservas';
 
 //WEB
-//const String baseUrl = 'http://localhost:8080/api';
-//const String baseUrlTarifas = 'http://localhost:8080/tarifas';
-//const String baseUrlReserva = '$baseUrl/reservas';
+const String baseUrl = 'http://localhost:8080/api';
+const String baseUrlTarifas = 'http://localhost:8080/tarifas';
+const String baseUrlReserva = '$baseUrl/reservas';
 
 // ──DESPLIEGUE PRODUCCION ──────────────────────────────────────────────────────────────────
-const String baseUrl = 'https://playzone-production.up.railway.app/api';
-const String baseUrlTarifas = 'https://playzone-production.up.railway.app/tarifas';
-const String baseUrlReserva = '$baseUrl/reservas';
+//const String baseUrl = 'https://playzone-production.up.railway.app/api';
+//const String baseUrlTarifas = 'https://playzone-production.up.railway.app/tarifas';
+//const String baseUrlReserva = '$baseUrl/reservas';
 
 
 

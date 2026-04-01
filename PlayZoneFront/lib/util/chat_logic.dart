@@ -1,66 +1,143 @@
 class ChatLogic {
   static final Map<RegExp, String> responses = {
-    // saludo
-    RegExp(r'hola|buenas|hey', caseSensitive: false):
+    // ───────────── SALUDOS ─────────────
+    RegExp(r'hola|buenas|hey|holi|que mas|qué más', caseSensitive: false):
         'Hola 👋 Soy el asistente de PlayZone. ¿En qué puedo ayudarte?',
 
-    // registro
-    RegExp(r'registr|crear cuenta', caseSensitive: false):
-        'Puedes registrarte desde la pantalla inicial completando tus datos básicos como nombre, correo y contraseña y luego confirmando tu correo con un código.',
+    RegExp(r'gracias|muchas gracias', caseSensitive: false):
+        '¡Con gusto! 😊 Si necesitas algo más aquí estoy.',
 
-    // login
-    RegExp(r'login|iniciar sesi[oó]n', caseSensitive: false):
-        'Para iniciar sesión ingresa tu correo y contraseña en la pantalla principal.',
+    // ───────────── REGISTRO / LOGIN ─────────────
+    RegExp(
+      r'registr|crear cuenta',
+      caseSensitive: false,
+    ): 'Puedes registrarte desde la pantalla inicial completando tus datos y confirmando tu correo con un código.',
 
-    // buscar
+    RegExp(
+      r'login|iniciar sesi[oó]n|entrar',
+      caseSensitive: false,
+    ): 'Ingresa tu correo y contraseña en la pantalla principal para iniciar sesión.',
+
+    RegExp(
+      r'no puedo entrar|error login|no inicia',
+      caseSensitive: false,
+    ): 'Verifica tu correo y contraseña. Si olvidaste tu clave, usa la opción de recuperación.',
+
+    RegExp(
+      r'olvid[eé] mi contrase',
+      caseSensitive: false,
+    ): 'Puedes recuperar tu contraseña desde la opción "¿Olvidaste tu contraseña?" en el login.',
+
+    // ───────────── APP / FUNCIONALIDAD ─────────────
+    RegExp(
+      r'que hace|para que sirve|que es playzone',
+      caseSensitive: false,
+    ): 'PlayZone te permite buscar, reservar y pagar canchas deportivas de forma rápida y segura.',
+
+    RegExp(
+      r'como funciona',
+      caseSensitive: false,
+    ): 'Buscas una cancha, eliges horario, reservas y pagas. Todo desde la app.',
+
+    // ───────────── CANCHAS ─────────────
     RegExp(r'buscar|cancha|encontrar', caseSensitive: false):
-        'Puedes buscar canchas desde la pagina principal de la app o "Inicio".',
+        'Puedes buscar canchas desde la pantalla principal o sección "Inicio".',
 
-    // reservar
+    RegExp(
+      r'ubicaci[oó]n|donde queda',
+      caseSensitive: false,
+    ): 'Cada cancha tiene su ubicación disponible en el mapa dentro de la app.',
+
+    RegExp(r'horario|hora disponible', caseSensitive: false):
+        'Puedes ver los horarios disponibles antes de reservar cada cancha.',
+
+    RegExp(
+      r'disponible|disponibilidad',
+      caseSensitive: false,
+    ): 'La disponibilidad depende del horario seleccionado y reservas existentes.',
+
+    // ───────────── RESERVAS ─────────────
     RegExp(r'reserv', caseSensitive: false):
-        'Selecciona una cancha, elige fecha y hora y presiona "Reservar". Luego continúa con el pago.',
+        'Selecciona una cancha, elige fecha y hora y presiona "Reservar".',
 
-    // pago
-    RegExp(r'pago|pagar|mercado pago', caseSensitive: false):
-        'El pago se realiza mediante Mercado Pago de forma segura dentro de la app o en efectivo en la sede teniendo en cuenta las políticas de pago en efectivo.',
-
-    // precio
-    RegExp(r'precio|costo|vale', caseSensitive: false):
-        'El precio depende de la cancha, horario y duración. Siempre podrás verlo antes de confirmar.',
-
-    // cancelar
-    RegExp(r'cancelar|eliminar reserva', caseSensitive: false):
-        'Puedes cancelar tu reserva desde la sección "Reservas" en tu perfil., puedes realizarlo como máximo el dia anterior',
-
-    // reservas
     RegExp(r'mis reservas|ver reservas', caseSensitive: false):
-        'Puedes ver todas tus reservas activas en la sección "Reservas" dentro de tu perfil.',
+        'Puedes ver tus reservas en la sección "Reservas" de tu perfil.',
 
-    // perfil
+    RegExp(r'no veo mi reserva', caseSensitive: false):
+        'Actualiza la pantalla o verifica el estado del pago.',
+
+    // ───────────── CANCELACIÓN (POLÍTICAS) ─────────────
+    RegExp(
+      r'cancelar|eliminar reserva',
+      caseSensitive: false,
+    ): 'Puedes cancelar tu reserva desde "Reservas". Solo se permite cancelar hasta el día anterior. No se puede cancelar el mismo día.',
+
+    RegExp(
+      r'cancelar mismo dia|cancelar hoy',
+      caseSensitive: false,
+    ): 'No es posible cancelar reservas el mismo día por políticas de la aplicación.',
+
+    // ───────────── PAGOS ─────────────
+    RegExp(r'pago|pagar|mercado pago', caseSensitive: false):
+        'Puedes pagar con Mercado Pago o en efectivo según disponibilidad.',
+
+    RegExp(r'fallo pago|error pago|rechazado', caseSensitive: false):
+        'El pago fue rechazado. Intenta nuevamente o usa otro método.',
+
+    RegExp(
+      r'efectivo',
+      caseSensitive: false,
+    ): 'El pago en efectivo requiere compromiso. Si no asistes, tu cuenta puede ser suspendida.',
+
+    RegExp(
+      r'politica efectivo|no asistir|no voy',
+      caseSensitive: false,
+    ): 'Si reservas en efectivo y no asistes, tu cuenta será suspendida temporalmente. Reincidir puede causar bloqueo permanente.',
+
+    // ───────────── PRECIOS ─────────────
+    RegExp(
+      r'precio|costo|vale|cuanto cuesta',
+      caseSensitive: false,
+    ): 'El precio depende de la cancha y horario. Siempre lo verás antes de confirmar.',
+
+    RegExp(r'porque cambia precio', caseSensitive: false):
+        'Los precios pueden variar según horario (ej: horas pico vs valle).',
+
+    // ───────────── PERFIL ─────────────
     RegExp(r'perfil|cuenta', caseSensitive: false):
-        'En tu perfil puedes editar tus datos, ver reservas y gestionar tu cuenta.',
+        'En tu perfil puedes ver reservas, editar datos y gestionar tu cuenta.',
 
-    // horarios
-    RegExp(r'horario|hora', caseSensitive: false):
-        'Cada cancha tiene horarios disponibles que puedes consultar antes de reservar.',
+    RegExp(r'editar datos|cambiar datos', caseSensitive: false):
+        'Puedes modificar tu información desde la sección perfil.',
 
-    // ubicación
-    RegExp(r'ubicaci[oó]n|donde', caseSensitive: false):
-        'Puedes ver la ubicación de cada cancha en el mapa dentro de la app.',
+    // ───────────── ERRORES / SOPORTE ─────────────
+    RegExp(r'error|problema|no funciona', caseSensitive: false):
+        'Ocurrió un problema. Intenta nuevamente o revisa tu conexión.',
 
-    // disponibilidad
-    RegExp(r'disponible|disponibilidad', caseSensitive: false):
-        'La disponibilidad depende del horario seleccionado. Puedes verificarlo antes de reservar.',
+    RegExp(
+      r'no carga|app lenta',
+      caseSensitive: false,
+    ): 'Puede ser un problema de conexión. Intenta recargar o revisar tu internet.',
 
-    // contacto
-    RegExp(r'contacto|soporte|ayuda', caseSensitive: false):
-        'Si necesitas ayuda adicional puedes contactar soporte desde la app o escribirnos directamente.',
+    RegExp(r'soporte|ayuda|contacto', caseSensitive: false):
+        'Puedes contactar soporte al correo playzone@gmail.com.',
 
-    // app
-    RegExp(r'que hace|para que sirve|que es', caseSensitive: false):
-        'PlayZone te permite buscar, reservar y pagar canchas deportivas de forma rápida y sencilla.',
+    // ───────────── ADMIN / NEGOCIO ─────────────
+    RegExp(
+      r'crear cancha|registrar cancha',
+      caseSensitive: false,
+    ): 'Los administradores pueden registrar canchas desde el panel de administración.',
 
-    // fallback
+    RegExp(r'reporte|estadistica|ganancias', caseSensitive: false):
+        'Puedes ver reportes desde el panel administrativo de cada cancha.',
+
+    // ───────────── SEGURIDAD ─────────────
+    RegExp(r'datos seguros|seguridad', caseSensitive: false):
+        'Tus datos y pagos están protegidos mediante protocolos seguros.',
+
+    // ───────────── DESPEDIDA ─────────────
+    RegExp(r'adios|chao|nos vemos', caseSensitive: false):
+        '¡Hasta luego! 👋 Que disfrutes PlayZone.',
   };
 
   static String getResponse(String text) {

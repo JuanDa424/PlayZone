@@ -217,7 +217,7 @@ class _RecoverPageState extends State<RecoverPage> {
                           _paso == 0
                               ? 'Te enviaremos un código de 6 dígitos a tu correo'
                               : _paso == 1
-                              ? 'Revisá tu correo ${_correoController.text}'
+                              ? 'Revisa tu correo ${_correoController.text}'
                               : 'Elige una contraseña segura',
                           style: const TextStyle(
                             color: kLightGray,
@@ -297,8 +297,8 @@ class _RecoverPageState extends State<RecoverPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(6, (i) {
             return Container(
-              width: 46,
-              height: 56,
+              width: 60,
+              height: 60,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               child: TextField(
                 controller: _codeControllers[i],
@@ -308,11 +308,12 @@ class _RecoverPageState extends State<RecoverPage> {
                 maxLength: 1,
                 style: const TextStyle(
                   color: kWhite,
-                  fontSize: 22,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
                 decoration: InputDecoration(
                   counterText: '',
+                  contentPadding: EdgeInsets.zero,
                   filled: true,
                   fillColor: kDarkGray,
                   border: OutlineInputBorder(
