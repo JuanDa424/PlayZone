@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 //const String baseUrlReserva = '$baseUrl/reservas';
 
 // ──DESPLIEGUE PRODUCCION ──────────────────────────────────────────────────────────────────
-//MOVIL
 const String baseUrl = 'https://playzone-production.up.railway.app/api';
 const String baseUrlTarifas = 'https://playzone-production.up.railway.app/tarifas';
 const String baseUrlReserva = '$baseUrl/reservas';

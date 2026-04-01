@@ -41,17 +41,22 @@ class ReservaApiService {
 
   // Método para cancelar la reserva en el servidor
   Future<bool> cancelarReserva(int reservaId) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrlReserva/$reservaId/cancelar'),
-      );
-      // Retorna true si el servidor respondió 200 OK
-      return response.statusCode == 200;
-    } catch (e) {
-      print("Error en el servicio de cancelación: $e");
-      return false;
-    }
+  final response = await http.put(
+    Uri.parse('$baseUrlReserva/$reservaId/cancelar'),
+  );
+  if (response.statusCode == 200) return true;
+  
+  // Intentar extraer el mensaje del backend
+  try {
+    final body = jsonDecode(response.body);
+    throw Exception(body['message'] ?? body['error'] ?? 'Error al cancelar');
+  } catch (e) {
+    if (e is Exception) rethrow;
+    throw Exception(response.body.isNotEmpty 
+        ? response.body 
+        : 'Error al cancelar la reserva');
   }
+}
 
   // GET /api/reservas/propietario/{propietarioId}
   Future<List<ReservaResponse>> fetchReservasPorPropietario(

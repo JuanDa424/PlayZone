@@ -1,5 +1,5 @@
 name: play_zone
-description: "A new Flutter project."
+description: "Sistema de reserva de canchas sinteticas en Bogotá, desarrollado en Flutter."
 publish_to: 'none'
 
 version: 1.0.0+1

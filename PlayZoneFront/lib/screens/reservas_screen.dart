@@ -117,7 +117,7 @@ class _ReservasScreenState extends State<ReservasScreen>
           style: TextStyle(color: kWhite, fontWeight: FontWeight.bold),
         ),
         content: const Text(
-          'La reserva aparecerá como cancelada y otros podrán tomar el turno.',
+          'Solo puedes cancelar hasta el día anterior a la reserva.',
           style: TextStyle(color: kLightGray),
         ),
         actions: [
@@ -141,15 +141,27 @@ class _ReservasScreenState extends State<ReservasScreen>
     );
 
     if (confirmar == true) {
-      final exito = await _apiService.cancelarReserva(id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        buildSnackBar(
-          exito ? 'Reserva cancelada y cupo liberado' : 'Error al cancelar',
-          isError: !exito,
-        ),
-      );
-      if (exito) _cargarDatos();
+      try {
+        final exito = await _apiService.cancelarReserva(id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          buildSnackBar(
+            exito
+                ? 'Reserva cancelada y cupo liberado'
+                : 'Solo puedes cancelar hasta el día anterior a la reserva',
+            isError: !exito,
+          ),
+        );
+        if (exito) _cargarDatos();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          buildSnackBar(
+            'Solo puedes cancelar hasta el día anterior a la reserva',
+            isError: true,
+          ),
+        );
+      }
     }
   }
 

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.play_zone1"
+    namespace = "com.example.play_zone"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.play_zone1"
+        applicationId = "com.example.play_zone"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

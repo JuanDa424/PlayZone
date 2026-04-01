@@ -5,11 +5,16 @@ import co.playzone.PlayZoneAPI.dto.AdminReservaDTO;
 import co.playzone.PlayZoneAPI.dto.AdminStatsDTO;
 import co.playzone.PlayZoneAPI.model.Canchas;
 import co.playzone.PlayZoneAPI.model.Reservas;
+import co.playzone.PlayZoneAPI.model.Rol;
 import co.playzone.PlayZoneAPI.model.Usuarios;
 import co.playzone.PlayZoneAPI.repository.CanchasRepositorio;
 import co.playzone.PlayZoneAPI.repository.ReservasRepositorio;
+import co.playzone.PlayZoneAPI.repository.RolRepositorio;
 import co.playzone.PlayZoneAPI.repository.UsuariosRepositorio;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -24,6 +29,11 @@ public class AdminController {
 	private final UsuariosRepositorio usuariosRepo;
 	private final CanchasRepositorio canchasRepo;
 	private final ReservasRepositorio reservasRepo;
+
+	@Autowired
+	private RolRepositorio rolRepositorio;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
 	public AdminController(UsuariosRepositorio usuariosRepo, CanchasRepositorio canchasRepo,
 			ReservasRepositorio reservasRepo) {
@@ -112,5 +122,34 @@ public class AdminController {
 			canchasRepo.save(c);
 			return ResponseEntity.ok("Disponibilidad actualizada.");
 		}).orElse(ResponseEntity.notFound().build());
+	}
+
+	@PostMapping("/usuarios/cancha-admin")
+	public ResponseEntity<?> crearAdminCancha(@RequestBody Map<String, String> body) {
+		try {
+			String nombre = body.get("nombre");
+			String correo = body.get("correo");
+			String password = body.get("password");
+			String telefono = body.getOrDefault("telefono", "");
+
+			if (nombre == null || correo == null || password == null) {
+				return ResponseEntity.badRequest().body(Map.of("error", "Nombre, correo y password son requeridos"));
+			}
+
+			if (usuariosRepo.existsByCorreo(correo)) {
+				return ResponseEntity.status(409).body(Map.of("error", "El correo ya está registrado"));
+			}
+
+			Rol rolAdmin = rolRepositorio.findByCodigo("CANCHA_ADMIN")
+					.orElseThrow(() -> new RuntimeException("Rol CANCHA_ADMIN no encontrado"));
+
+			Usuarios nuevo = new Usuarios(nombre, correo, telefono, passwordEncoder.encode(password), rolAdmin);
+			nuevo.setEmailVerified(true);
+			usuariosRepo.save(nuevo);
+
+			return ResponseEntity.ok(Map.of("mensaje", "Admin de cancha creado exitosamente"));
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+		}
 	}
 }

@@ -1,5 +1,6 @@
 package co.playzone.PlayZoneAPI.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,8 +82,11 @@ public class ReservaServicio {
 		Reservas reserva = reservasRepo.findById(id)
 				.orElseThrow(() -> new RuntimeException("La reserva con ID " + id + " no existe."));
 
-		// Simplemente cambiamos el estado.
-		// No la borramos para que el usuario la siga viendo en su historial.
+		// Solo se puede cancelar hasta el día anterior
+		if (!LocalDate.now().isBefore(reserva.getFechaReserva())) {
+			throw new RuntimeException("Solo puedes cancelar hasta el día anterior a la reserva.");
+		}
+
 		reserva.setEstado("CANCELADA");
 		reservasRepo.save(reserva);
 	}

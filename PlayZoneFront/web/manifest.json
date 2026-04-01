@@ -1,6 +1,6 @@
 {
-    "name": "play_zone1",
-    "short_name": "play_zone1",
+    "name": "play_zone",
+    "short_name": "play_zone",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
