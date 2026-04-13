@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 @Service
 public class EmailService {
 
-	@Value("${RESEND_API_KEY:}")
+	@Value("${RESEND_API_KEY}")
 	private String apiKey;
 
 	@Value("${RESEND_FROM_EMAIL:no-reply@controlsas.com.co}")

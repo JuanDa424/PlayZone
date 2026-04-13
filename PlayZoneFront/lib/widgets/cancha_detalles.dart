@@ -6,7 +6,6 @@ import '../models/cancha.dart';
 import '../models/tarifa_horaria.dart';
 import '../util/constants.dart';
 import 'package:intl/intl.dart';
-import 'package:geocoding/geocoding.dart';
 
 class CanchaDetalles extends StatefulWidget {
   final Canchas cancha;
